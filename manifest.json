@@ -1,0 +1,14 @@
+{
+  "name": "Contraction Tracker",
+  "short_name": "Contractions",
+  "description": "Track labor contraction timing, frequency, duration and intensity. Works offline.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1b1530",
+  "theme_color": "#6b46c1",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
