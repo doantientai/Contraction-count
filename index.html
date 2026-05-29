@@ -145,6 +145,25 @@
     .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
       background: var(--good); color: #08321f; padding: 10px 18px; border-radius: 999px;
       font-weight: 600; font-size: 0.85rem; z-index: 60; box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
+
+    /* View toggle + graph */
+    .view-toggle { display: flex; background: var(--card); border-radius: 12px; padding: 4px; gap: 4px; margin-bottom: 12px; }
+    .seg { flex: 1; border: none; background: transparent; color: var(--muted); padding: 9px;
+      border-radius: 9px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+    .seg.on { background: var(--accent); color: #fff; }
+    .chart-controls { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .chart-controls .spacer { flex: 1; }
+    .chart-controls .lbl { color: var(--muted); font-size: 0.78rem; }
+    .zoom-btn { width: 40px; height: 36px; border-radius: 10px; border: 1px solid var(--muted);
+      background: transparent; color: var(--text); font-size: 1.2rem; cursor: pointer; }
+    .zoom-btn:active { background: rgba(255,255,255,0.08); }
+    .chart-wrap { display: flex; background: var(--card); border-radius: 16px; padding: 8px 4px 8px 0; }
+    .y-axis { position: relative; width: 32px; flex: 0 0 32px; }
+    .y-axis .ylabel { position: absolute; right: 4px; transform: translateY(-50%);
+      font-size: 0.68rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .chart-scroll { overflow-x: auto; overflow-y: hidden; flex: 1; -webkit-overflow-scrolling: touch; touch-action: pan-x; }
+    canvas#chart { display: block; height: 280px; }
+    .chart-hint { color: var(--muted); font-size: 0.74rem; text-align: center; margin: 8px 0 80px; line-height: 1.5; }
   </style>
 </head>
 <body>
@@ -195,12 +214,34 @@
     <button id="clearBtn" class="btn-small">Clear all</button>
   </div>
 
-  <table>
-    <thead>
-      <tr><th>#</th><th>Time</th><th>Duration</th><th>Freq</th><th>Int.</th><th></th></tr>
-    </thead>
-    <tbody id="historyBody"></tbody>
-  </table>
+  <div class="view-toggle">
+    <button id="viewList" class="seg on">📋 List</button>
+    <button id="viewGraph" class="seg">📊 Graph</button>
+  </div>
+
+  <div id="listView">
+    <table>
+      <thead>
+        <tr><th>#</th><th>Time</th><th>Duration</th><th>Freq</th><th>Int.</th><th></th></tr>
+      </thead>
+      <tbody id="historyBody"></tbody>
+    </table>
+  </div>
+
+  <div id="graphView" class="hidden">
+    <div class="chart-controls">
+      <button id="zoomOut" class="zoom-btn">−</button>
+      <button id="zoomIn" class="zoom-btn">+</button>
+      <button id="zoomFit" class="btn-small">Fit</button>
+      <span class="spacer"></span>
+      <span class="lbl">tap a bar to edit</span>
+    </div>
+    <div class="chart-wrap">
+      <div id="yAxis" class="y-axis"></div>
+      <div id="chartScroll" class="chart-scroll"><canvas id="chart"></canvas></div>
+    </div>
+    <div class="chart-hint">Each column is a contraction · width = duration · height &amp; colour = intensity · pinch or use −/+ to zoom</div>
+  </div>
 
   <script>
     const STORAGE_KEY = 'contractions_v1';
@@ -214,6 +255,10 @@
     let editingIndex = null;            // index currently shown in the detail panel
     let settings = { keepAwake: false, vibrate: true };
     let wakeLock = null;
+    let view = 'list';                  // 'list' | 'graph'
+    let pxPerMin = 30;                  // graph zoom (horizontal scale)
+    let lastBars = [];                  // hit-test rects for the chart
+    let graphInitialized = false;
 
     // ---------- persistence ----------
     function load() {
@@ -390,6 +435,7 @@
         });
       }
       renderStats();
+      if (view === 'graph') drawChart();
     }
 
     function renderStats() {
@@ -527,6 +573,183 @@
       clearTimeout(toastTimer);
       toastTimer = setTimeout(() => t.remove(), 1800);
     }
+
+    // ---------- view toggle + graph ----------
+    const CHART_H = 280;
+    const viewListBtn = document.getElementById('viewList');
+    const viewGraphBtn = document.getElementById('viewGraph');
+    const listView = document.getElementById('listView');
+    const graphView = document.getElementById('graphView');
+    const chartScroll = document.getElementById('chartScroll');
+    const canvas = document.getElementById('chart');
+    const yAxis = document.getElementById('yAxis');
+
+    function setView(v) {
+      view = v;
+      viewListBtn.classList.toggle('on', v === 'list');
+      viewGraphBtn.classList.toggle('on', v === 'graph');
+      listView.classList.toggle('hidden', v !== 'list');
+      graphView.classList.toggle('hidden', v !== 'graph');
+      if (v === 'graph') {
+        if (!graphInitialized) { fitZoom(); graphInitialized = true; }
+        drawChart();
+      }
+    }
+    viewListBtn.addEventListener('click', () => setView('list'));
+    viewGraphBtn.addEventListener('click', () => setView('graph'));
+
+    function clampZoom(z) { return Math.max(2, Math.min(600, z)); }
+    function fitZoom() {
+      if (contractions.length === 0) { pxPerMin = 30; return; }
+      const t0 = contractions[0].start;
+      const tEnd = Math.max(...contractions.map(c => c.end));
+      const w = Math.max(80, chartScroll.clientWidth - 50);
+      const totalMs = Math.max(60000, tEnd - t0);
+      pxPerMin = clampZoom((w / totalMs) * 60000);
+    }
+    function zoomAround(factor) {
+      const cs = chartScroll;
+      const center = cs.scrollLeft + cs.clientWidth / 2;
+      const nz = clampZoom(pxPerMin * factor);
+      const scale = nz / pxPerMin;
+      pxPerMin = nz;
+      drawChart();
+      cs.scrollLeft = center * scale - cs.clientWidth / 2;
+    }
+    document.getElementById('zoomIn').addEventListener('click', () => zoomAround(1.5));
+    document.getElementById('zoomOut').addEventListener('click', () => zoomAround(1 / 1.5));
+    document.getElementById('zoomFit').addEventListener('click', () => { fitZoom(); drawChart(); chartScroll.scrollLeft = 0; });
+
+    function lerpColor(a, b, t) {
+      t = Math.max(0, Math.min(1, t));
+      return 'rgb(' + Math.round(a[0]+(b[0]-a[0])*t) + ',' + Math.round(a[1]+(b[1]-a[1])*t) + ',' + Math.round(a[2]+(b[2]-a[2])*t) + ')';
+    }
+    function roundRectFill(ctx, x, y, w, h, r) {
+      r = Math.max(0, Math.min(r, h / 2, w / 2));
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath(); ctx.fill();
+    }
+
+    function drawChart() {
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const containerW = chartScroll.clientWidth || 320;
+
+      if (contractions.length === 0) {
+        canvas.style.width = containerW + 'px'; canvas.style.height = CHART_H + 'px';
+        canvas.width = Math.round(containerW * dpr); canvas.height = Math.round(CHART_H * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, containerW, CHART_H);
+        ctx.fillStyle = '#b3a9d4'; ctx.textAlign = 'center'; ctx.font = '14px sans-serif';
+        ctx.fillText('No contractions logged yet.', containerW / 2, CHART_H / 2);
+        yAxis.innerHTML = ''; lastBars = [];
+        return;
+      }
+
+      const t0 = contractions[0].start;
+      const tEnd = Math.max(...contractions.map(c => c.end));
+      const pxPerMs = pxPerMin / 60000;
+      const padLeft = 10, padRight = 40;
+      const cssW = Math.max(containerW, padLeft + padRight + (tEnd - t0) * pxPerMs);
+
+      canvas.style.width = cssW + 'px'; canvas.style.height = CHART_H + 'px';
+      canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(CHART_H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, cssW, CHART_H);
+
+      const vals = contractions.map(c => (c.intensity == null ? 0 : c.intensity));
+      let lo = Math.min(0, ...vals), hi = Math.max(0, ...vals);
+      if (lo === hi) { lo -= 1; hi += 1; }
+      const plotTop = 12, plotBottom = CHART_H - 26, plotH = plotBottom - plotTop, minBarH = 14;
+      const yFor = v => plotBottom - (minBarH + ((v - lo) / (hi - lo)) * (plotH - minBarH));
+
+      // y gridlines + fixed gutter labels
+      yAxis.innerHTML = ''; yAxis.style.height = CHART_H + 'px';
+      ctx.lineWidth = 1;
+      for (let v = Math.ceil(lo); v <= Math.floor(hi); v++) {
+        const y = yFor(v);
+        ctx.strokeStyle = v === 0 ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.07)';
+        ctx.beginPath(); ctx.moveTo(0, y + 0.5); ctx.lineTo(cssW, y + 0.5); ctx.stroke();
+        const lab = document.createElement('div');
+        lab.className = 'ylabel'; lab.style.top = y + 'px';
+        lab.textContent = v > 0 ? '+' + v : '' + v;
+        yAxis.appendChild(lab);
+      }
+
+      // x time gridlines + labels
+      const steps = [1, 2, 5, 10, 15, 30, 60, 120];
+      let step = steps[steps.length - 1];
+      for (const s of steps) { if (s * pxPerMin >= 64) { step = s; break; } }
+      const stepMs = step * 60000;
+      ctx.fillStyle = 'rgba(179,169,212,0.9)'; ctx.textAlign = 'center'; ctx.font = '11px sans-serif';
+      for (let tt = Math.ceil(t0 / stepMs) * stepMs; tt <= tEnd; tt += stepMs) {
+        const x = padLeft + (tt - t0) * pxPerMs;
+        ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+        ctx.beginPath(); ctx.moveTo(x + 0.5, plotTop); ctx.lineTo(x + 0.5, plotBottom); ctx.stroke();
+        ctx.fillText(fmtClock(tt), x, CHART_H - 8);
+      }
+
+      // bars
+      lastBars = [];
+      for (let i = 0; i < contractions.length; i++) {
+        const c = contractions[i];
+        const v = c.intensity == null ? 0 : c.intensity;
+        const x = padLeft + (c.start - t0) * pxPerMs;
+        const w = Math.max(3, (c.end - c.start) * pxPerMs);
+        const top = yFor(v);
+        const norm = (v - lo) / (hi - lo);
+        ctx.fillStyle = lerpColor([139, 92, 246], [239, 68, 68], norm);
+        roundRectFill(ctx, x, top, w, plotBottom - top, Math.min(4, w / 2));
+        lastBars.push({ i, x, w, top: plotTop, bottom: plotBottom });
+        if (w >= 22) {
+          ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+          const label = fmtIntensity(c.intensity);
+          if (label !== '–') ctx.fillText(label, x + w / 2, Math.max(top - 3, plotTop + 9));
+        }
+      }
+    }
+
+    // tap a bar to edit it
+    canvas.addEventListener('click', e => {
+      const r = canvas.getBoundingClientRect();
+      const x = e.clientX - r.left, y = e.clientY - r.top;
+      for (const b of lastBars) {
+        if (x >= b.x - 3 && x <= b.x + b.w + 3 && y >= b.top && y <= b.bottom) { openDetail(b.i); return; }
+      }
+    });
+
+    // pinch-to-zoom
+    let pinch = null;
+    function touchDist(e) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      return Math.hypot(dx, dy);
+    }
+    chartScroll.addEventListener('touchstart', e => {
+      if (e.touches.length === 2) {
+        const r = chartScroll.getBoundingClientRect();
+        const mid = (e.touches[0].clientX + e.touches[1].clientX) / 2 - r.left;
+        pinch = { d: touchDist(e), z: pxPerMin, content: chartScroll.scrollLeft + mid, mid };
+      }
+    }, { passive: true });
+    chartScroll.addEventListener('touchmove', e => {
+      if (pinch && e.touches.length === 2) {
+        e.preventDefault();
+        const nz = clampZoom(pinch.z * (touchDist(e) / pinch.d));
+        const scale = nz / pinch.z;
+        pxPerMin = nz;
+        drawChart();
+        chartScroll.scrollLeft = pinch.content * scale - pinch.mid;
+      }
+    }, { passive: false });
+    chartScroll.addEventListener('touchend', e => { if (e.touches.length < 2) pinch = null; });
+
+    window.addEventListener('resize', () => { if (view === 'graph') drawChart(); });
 
     // ---------- clear ----------
     document.getElementById('clearBtn').addEventListener('click', () => {
