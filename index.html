@@ -72,8 +72,10 @@
       display: flex; flex-direction: column; gap: 3px; align-items: center;
     }
     .int-btn .ico { font-size: 1.3rem; }
-    .int-btn.sel { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .int-btn:active { background: var(--accent); border-color: var(--accent); color: #fff; }
     .baseline-note { color: var(--muted); font-size: 0.85rem; margin-bottom: 12px; }
+    .int-readout { text-align: center; font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; margin-bottom: 10px; min-height: 2rem; letter-spacing: 2px; }
+    .int-hint { color: var(--muted); font-size: 0.78rem; text-align: center; margin-top: 8px; }
     .note-input {
       width: 100%; background: var(--card2); border: 1px solid rgba(255,255,255,0.14);
       color: var(--text); border-radius: 12px; padding: 10px 12px; font-size: 0.9rem; resize: vertical;
@@ -157,12 +159,14 @@
   <!-- intensity + note panel (shown after a contraction, or when editing a row) -->
   <div id="detailPanel" class="panel hidden">
     <h3>Contraction <span id="detailNum" class="num">#1</span></h3>
-    <div id="baselineNote" class="baseline-note hidden">First contraction — this sets the baseline to compare the next ones against.</div>
+    <div id="baselineNote" class="baseline-note hidden">First contraction — sets the baseline. On the next ones, tap to describe how they compare.</div>
+    <div id="intReadout" class="int-readout">–</div>
     <div id="intensityRow" class="intensity-row">
-      <button class="int-btn" data-int="weaker"><span class="ico">↓</span>Weaker</button>
-      <button class="int-btn" data-int="same"><span class="ico">→</span>Same</button>
-      <button class="int-btn" data-int="stronger"><span class="ico">↑</span>Stronger</button>
+      <button class="int-btn" data-delta="-1"><span class="ico">−</span>Weaker</button>
+      <button class="int-btn" data-zero="1"><span class="ico">~</span>Same</button>
+      <button class="int-btn" data-delta="1"><span class="ico">+</span>Stronger</button>
     </div>
+    <div class="int-hint">Tap more than once for a bigger change — e.g. ++ much stronger, −−− much weaker.</div>
     <textarea id="noteInput" class="note-input" placeholder="Optional note (e.g. felt in back, water broke, took a walk…)"></textarea>
     <div class="panel-actions">
       <button id="detailDone" class="btn-primary">Done</button>
@@ -214,6 +218,9 @@
     // ---------- persistence ----------
     function load() {
       try { contractions = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { contractions = []; }
+      // migrate older string intensities to the signed-number scale
+      const MAP = { weaker: -1, same: 0, stronger: 1 };
+      contractions.forEach(c => { if (typeof c.intensity === 'string') c.intensity = MAP[c.intensity] ?? null; });
       const a = localStorage.getItem(ACTIVE_KEY);
       activeStart = a ? parseInt(a, 10) : null;
       try { Object.assign(settings, JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}); } catch {}
@@ -233,7 +240,15 @@
     function fmtClock(ts) {
       return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
-    const INT_LABEL = { weaker: '↓', same: '→', stronger: '↑' };
+    // intensity is a signed integer relative to the previous contraction:
+    // null = unset, 0 = same (~), >0 = stronger (+), <0 = weaker (−)
+    function fmtIntensity(v) {
+      if (v == null) return '–';
+      if (v === 0) return '~';
+      const sym = v > 0 ? '+' : '−';
+      const n = Math.abs(v);
+      return n <= 3 ? sym.repeat(n) : sym + n;   // ++ up to 3, then "+4" etc.
+    }
 
     // ---------- vibrate ----------
     function buzz(pattern) { if (settings.vibrate && navigator.vibrate) { try { navigator.vibrate(pattern); } catch {} } }
@@ -293,20 +308,22 @@
     const detailNum = document.getElementById('detailNum');
     const intensityRow = document.getElementById('intensityRow');
     const baselineNote = document.getElementById('baselineNote');
+    const intReadout = document.getElementById('intReadout');
     const noteInput = document.getElementById('noteInput');
 
     function openDetail(i) {
       editingIndex = i;
       const c = contractions[i];
       detailNum.textContent = '#' + (i + 1);
-      const isFirst = i === 0;
-      baselineNote.classList.toggle('hidden', !isFirst);
-      intensityRow.classList.toggle('hidden', isFirst);
-      intensityRow.querySelectorAll('.int-btn').forEach(b =>
-        b.classList.toggle('sel', b.dataset.int === c.intensity));
+      baselineNote.classList.toggle('hidden', i !== 0);
+      updateReadout();
       noteInput.value = c.note || '';
       detailPanel.classList.remove('hidden');
       detailPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    function updateReadout() {
+      if (editingIndex === null) return;
+      intReadout.textContent = fmtIntensity(contractions[editingIndex].intensity);
     }
     function closeDetail() {
       if (editingIndex !== null && contractions[editingIndex]) {
@@ -320,10 +337,16 @@
     intensityRow.querySelectorAll('.int-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         if (editingIndex === null) return;
-        const v = btn.dataset.int;
         const c = contractions[editingIndex];
-        c.intensity = (c.intensity === v) ? null : v;   // tap again to clear
-        intensityRow.querySelectorAll('.int-btn').forEach(b => b.classList.toggle('sel', b.dataset.int === c.intensity));
+        if (btn.dataset.zero) {
+          c.intensity = 0;                              // "same"
+        } else {
+          const delta = parseInt(btn.dataset.delta, 10);
+          const base = (typeof c.intensity === 'number') ? c.intensity : 0;
+          c.intensity = Math.max(-9, Math.min(9, base + delta));
+        }
+        updateReadout();
+        buzz(20);
         save();
       });
     });
@@ -348,7 +371,7 @@
               (c.note ? '<span class="note-cell">📝 ' + escapeHtml(c.note) + '</span>' : '') + '</td>' +
             '<td>' + fmtDuration(dur) + '</td>' +
             '<td>' + (freq !== null ? fmtDuration(freq) : '--') + '</td>' +
-            '<td>' + (c.intensity ? INT_LABEL[c.intensity] : '–') + '</td>' +
+            '<td>' + fmtIntensity(c.intensity) + '</td>' +
             '<td><button class="row-del" data-i="' + i + '">✕</button></td>';
           tr.addEventListener('click', (e) => {
             if (e.target.classList.contains('row-del')) return;
@@ -440,7 +463,7 @@
           fmtDuration(dur),
           Math.round(dur / 1000),
           freq !== '' ? fmtDuration(freq) : '',
-          c.intensity || '',
+          c.intensity == null ? '' : fmtIntensity(c.intensity),
           (c.note || '').replace(/"/g, '""'),
         ]);
       });
