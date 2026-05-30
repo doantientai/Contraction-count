@@ -106,6 +106,7 @@
       padding: 10px; font-size: 0.82rem; color: var(--muted); cursor: pointer;
     }
     .toggle.on { color: var(--text); border-color: var(--accent); background: var(--card2); }
+    .toggle.na { opacity: 0.5; }
     .toggle .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
     .toggle.on .dot { background: var(--good); }
 
@@ -205,7 +206,7 @@
 
   <div class="settings">
     <button id="toggleWake" class="toggle"><span class="dot"></span>Keep screen on</button>
-    <button id="toggleVibe" class="toggle"><span class="dot"></span>Vibrate</button>
+    <button id="toggleVibe" class="toggle"><span class="dot"></span><span id="vibeLabel">Vibrate</span></button>
   </div>
 
   <div class="history-header">
@@ -296,7 +297,11 @@
     }
 
     // ---------- vibrate ----------
-    function buzz(pattern) { if (settings.vibrate && navigator.vibrate) { try { navigator.vibrate(pattern); } catch {} } }
+    const vibrationSupported = typeof navigator.vibrate === 'function';
+    function buzz(pattern) {
+      if (!settings.vibrate || !vibrationSupported) return false;
+      try { return navigator.vibrate(pattern); } catch { return false; }
+    }
 
     // ---------- wake lock ----------
     async function requestWake() {
@@ -482,17 +487,29 @@
     // ---------- settings toggles ----------
     const toggleWake = document.getElementById('toggleWake');
     const toggleVibe = document.getElementById('toggleVibe');
+    const vibeLabel = document.getElementById('vibeLabel');
     function renderToggles() {
       toggleWake.classList.toggle('on', settings.keepAwake);
-      toggleVibe.classList.toggle('on', settings.vibrate);
+      toggleVibe.classList.toggle('on', settings.vibrate && vibrationSupported);
+      toggleVibe.classList.toggle('na', !vibrationSupported);
+      vibeLabel.textContent = vibrationSupported ? 'Vibrate' : 'Vibrate (n/a)';
     }
     toggleWake.addEventListener('click', () => {
       settings.keepAwake = !settings.keepAwake; saveSettings(); renderToggles();
       if (settings.keepAwake) requestWake(); else releaseWake();
     });
     toggleVibe.addEventListener('click', () => {
+      if (!vibrationSupported) {
+        showToast('This browser can’t vibrate (e.g. iPhone/Safari)');
+        return;
+      }
       settings.vibrate = !settings.vibrate; saveSettings(); renderToggles();
-      if (settings.vibrate) buzz(40);
+      if (settings.vibrate) {
+        navigator.vibrate([60, 40, 60]);        // fire a clear test buzz
+        showToast('Test buzz — if nothing, check silent / battery-saver');
+      } else {
+        showToast('Vibration off');
+      }
     });
 
     // ---------- export ----------
