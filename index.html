@@ -206,7 +206,7 @@
 
   <div class="settings">
     <button id="toggleWake" class="toggle"><span class="dot"></span>Keep screen on</button>
-    <button id="toggleVibe" class="toggle"><span class="dot"></span><span id="vibeLabel">Vibrate</span></button>
+    <button id="toggleSound" class="toggle"><span class="dot"></span><span id="soundLabel">Sound</span></button>
   </div>
 
   <div class="history-header">
@@ -254,7 +254,7 @@
     let activeStart = null;
     let tickInterval = null;
     let editingIndex = null;            // index currently shown in the detail panel
-    let settings = { keepAwake: false, vibrate: true };
+    let settings = { keepAwake: false, sound: true };
     let wakeLock = null;
     let view = 'list';                  // 'list' | 'graph'
     let pxPerMin = 30;                  // graph zoom (horizontal scale)
@@ -296,11 +296,35 @@
       return n <= 3 ? sym.repeat(n) : sym + n;   // ++ up to 3, then "+4" etc.
     }
 
-    // ---------- vibrate ----------
-    const vibrationSupported = typeof navigator.vibrate === 'function';
-    function buzz(pattern) {
-      if (!settings.vibrate || !vibrationSupported) return false;
-      try { return navigator.vibrate(pattern); } catch { return false; }
+    // ---------- sound ----------
+    // Soft chimes synthesised with the Web Audio API — no files, works offline & on iOS.
+    const soundSupported = typeof (window.AudioContext || window.webkitAudioContext) === 'function';
+    let audioCtx = null;
+    function ensureAudio() {
+      if (!soundSupported) return null;
+      if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch { return null; } }
+      if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+      return audioCtx;
+    }
+    // One gentle sine note with a soft fade in/out so there are no clicks.
+    function tone(freq, delay, dur, peak) {
+      const t = audioCtx.currentTime + delay;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(peak, t + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(t); osc.stop(t + dur + 0.03);
+    }
+    // kind: 'start' (soft rising), 'stop' (soft falling), 'tap' (tiny tick)
+    function chime(kind) {
+      if (!settings.sound || !ensureAudio()) return;
+      if (kind === 'start')      { tone(523.25, 0, 0.22, 0.10); tone(783.99, 0.13, 0.30, 0.09); }
+      else if (kind === 'stop')  { tone(783.99, 0, 0.22, 0.10); tone(523.25, 0.13, 0.34, 0.09); }
+      else                       { tone(880.00, 0, 0.08, 0.05); }
     }
 
     // ---------- wake lock ----------
@@ -321,13 +345,13 @@
     timerBtn.addEventListener('click', () => {
       if (activeStart === null) {
         activeStart = Date.now();
-        save(); renderTimerState(); startTick(); requestWake(); buzz(40);
+        save(); renderTimerState(); startTick(); requestWake(); chime('start');
       } else {
         const end = Date.now(), start = activeStart;
         activeStart = null;
         save(); stopTick(); renderTimerState();
         if (!settings.keepAwake) releaseWake();
-        buzz([60, 40, 60]);
+        chime('stop');
         if (end - start >= 1000) {
           contractions.push({ start, end, intensity: null, note: '' });
           save(); renderAll();
@@ -396,7 +420,7 @@
           c.intensity = Math.max(-9, Math.min(9, base + delta));
         }
         updateReadout();
-        buzz(20);
+        chime('tap');
         save();
       });
     });
@@ -486,30 +510,23 @@
 
     // ---------- settings toggles ----------
     const toggleWake = document.getElementById('toggleWake');
-    const toggleVibe = document.getElementById('toggleVibe');
-    const vibeLabel = document.getElementById('vibeLabel');
+    const toggleSound = document.getElementById('toggleSound');
+    const soundLabel = document.getElementById('soundLabel');
     function renderToggles() {
       toggleWake.classList.toggle('on', settings.keepAwake);
-      toggleVibe.classList.toggle('on', settings.vibrate && vibrationSupported);
-      toggleVibe.classList.toggle('na', !vibrationSupported);
-      vibeLabel.textContent = vibrationSupported ? 'Vibrate' : 'Vibrate (n/a)';
+      toggleSound.classList.toggle('on', settings.sound && soundSupported);
+      toggleSound.classList.toggle('na', !soundSupported);
+      soundLabel.textContent = soundSupported ? 'Sound' : 'Sound (n/a)';
     }
     toggleWake.addEventListener('click', () => {
       settings.keepAwake = !settings.keepAwake; saveSettings(); renderToggles();
       if (settings.keepAwake) requestWake(); else releaseWake();
     });
-    toggleVibe.addEventListener('click', () => {
-      if (!vibrationSupported) {
-        showToast('This browser can’t vibrate (e.g. iPhone/Safari)');
-        return;
-      }
-      settings.vibrate = !settings.vibrate; saveSettings(); renderToggles();
-      if (settings.vibrate) {
-        navigator.vibrate([60, 40, 60]);        // fire a clear test buzz
-        showToast('Test buzz — if nothing, check silent / battery-saver');
-      } else {
-        showToast('Vibration off');
-      }
+    toggleSound.addEventListener('click', () => {
+      if (!soundSupported) { showToast('This browser can’t play sound'); return; }
+      settings.sound = !settings.sound; saveSettings(); renderToggles();
+      if (settings.sound) { chime('start'); showToast('Sound on'); }
+      else { showToast('Sound off'); }
     });
 
     // ---------- export ----------
