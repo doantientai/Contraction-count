@@ -230,10 +230,11 @@
 </head>
 <body>
   <div class="topbar">
-    <h1>🤰 Contraction Tracker</h1>
-    <button id="focusBtn" class="btn-small focus-btn">Focus</button>
+    <h1 data-i18n="title">🤰 Contraction Tracker</h1>
+    <button id="langBtn" class="btn-small">FR</button>
+    <button id="focusBtn" class="btn-small focus-btn" data-i18n="focus">Focus</button>
   </div>
-  <div class="subtitle hide-in-focus">Tap to start when a contraction begins, tap again when it ends.</div>
+  <div class="subtitle hide-in-focus" data-i18n="subtitle">Tap to start when a contraction begins, tap again when it ends.</div>
 
   <button id="timerBtn" class="timer-btn">
     <span id="timerLabel" class="timer-label">Start Contraction</span>
@@ -243,31 +244,31 @@
   <div id="breath">
     <div class="breath-circle"></div>
     <div class="breath-label">
-      <span class="breath-in">Breathe in…</span>
-      <span class="breath-out">Breathe out…</span>
+      <span class="breath-in" data-i18n="breatheIn">Breathe in…</span>
+      <span class="breath-out" data-i18n="breatheOut">Breathe out…</span>
     </div>
   </div>
 
   <div id="focusStats" class="stats focus-only focus-stats">
-    <div><span id="fSince" class="v">--</span><small>since last</small></div>
-    <div><span id="fLast" class="v">--</span><small>last lasted</small></div>
+    <div><span id="fSince" class="v">--</span><small data-i18n="sinceLastSmall">since last</small></div>
+    <div><span id="fLast" class="v">--</span><small data-i18n="lastLasted">last lasted</small></div>
   </div>
 
   <!-- intensity + note panel (shown after a contraction, or when editing a row) -->
   <div id="detailPanel" class="panel hidden">
-    <h3>Contraction <span id="detailNum" class="num">#1</span></h3>
-    <div id="baselineNote" class="baseline-note hidden">First contraction — sets the baseline. On the next ones, tap to describe how they compare.</div>
+    <h3><span data-i18n="contractionWord">Contraction</span> <span id="detailNum" class="num">#1</span></h3>
+    <div id="baselineNote" class="baseline-note hidden" data-i18n="baseline">First contraction — sets the baseline. On the next ones, tap to describe how they compare.</div>
     <div id="intReadout" class="int-readout">–</div>
     <div id="intensityRow" class="intensity-row">
-      <button class="int-btn" data-delta="-1"><span class="ico">−</span>Weaker</button>
-      <button class="int-btn" data-zero="1"><span class="ico">~</span>Same</button>
-      <button class="int-btn" data-delta="1"><span class="ico">+</span>Stronger</button>
+      <button class="int-btn" data-delta="-1"><span class="ico">−</span><span data-i18n="weaker">Weaker</span></button>
+      <button class="int-btn" data-zero="1"><span class="ico">~</span><span data-i18n="same">Same</span></button>
+      <button class="int-btn" data-delta="1"><span class="ico">+</span><span data-i18n="stronger">Stronger</span></button>
     </div>
-    <div class="int-hint">Tap more than once for a bigger change — e.g. ++ much stronger, −−− much weaker.</div>
+    <div class="int-hint" data-i18n="intHint">Tap more than once for a bigger change — e.g. ++ much stronger, −−− much weaker.</div>
 
     <div class="timing">
       <div class="timing-row">
-        <span class="tlabel">Start</span>
+        <span class="tlabel" data-i18n="start">Start</span>
         <button class="tbtn" data-edit="start" data-step="-60">−1m</button>
         <button class="tbtn" data-edit="start" data-step="-5">−5s</button>
         <span id="editStart" class="tval">--</span>
@@ -275,42 +276,40 @@
         <button class="tbtn" data-edit="start" data-step="60">+1m</button>
       </div>
       <div class="timing-row">
-        <span class="tlabel">End</span>
+        <span class="tlabel" data-i18n="end">End</span>
         <button class="tbtn" data-edit="end" data-step="-60">−1m</button>
         <button class="tbtn" data-edit="end" data-step="-5">−5s</button>
         <span id="editEnd" class="tval">--</span>
         <button class="tbtn" data-edit="end" data-step="5">+5s</button>
         <button class="tbtn" data-edit="end" data-step="60">+1m</button>
       </div>
-      <div class="timing-dur">Duration <b id="editDur">--</b></div>
+      <div class="timing-dur"><span data-i18n="duration">Duration</span> <b id="editDur">--</b></div>
     </div>
 
     <div id="chips" class="chips">
-      <button class="chip" data-tag="Back labor">Back labor</button>
-      <button class="chip" data-tag="Water broke">Water broke</button>
-      <button class="chip" data-tag="Bloody show">Bloody show</button>
-      <button class="chip" data-tag="Nausea">Nausea</button>
-      <button class="chip" data-tag="Mucus plug">Mucus plug</button>
+      <button class="chip" data-tag="chipBack" data-i18n="chipBack">Back labor</button>
+      <button class="chip" data-tag="chipWater" data-i18n="chipWater">Water broke</button>
+      <button class="chip" data-tag="chipShow" data-i18n="chipShow">Bloody show</button>
+      <button class="chip" data-tag="chipNausea" data-i18n="chipNausea">Nausea</button>
+      <button class="chip" data-tag="chipPlug" data-i18n="chipPlug">Mucus plug</button>
     </div>
-    <textarea id="noteInput" class="note-input" placeholder="Optional note (e.g. felt in back, took a walk…)"></textarea>
+    <textarea id="noteInput" class="note-input" data-i18n-ph="notePh" placeholder="Optional note (e.g. felt in back, took a walk…)"></textarea>
     <div class="panel-actions">
-      <button id="detailDone" class="btn-primary">Done</button>
+      <button id="detailDone" class="btn-primary" data-i18n="done">Done</button>
     </div>
   </div>
 
-  <div id="alert511" class="alert hidden">
-    ⚠️ 5-1-1 pattern reached — contractions ~5 min apart, lasting ~1 min, for 1 hour. Consider contacting your provider.
-  </div>
+  <div id="alert511" class="alert hidden"></div>
 
   <div class="stats hide-in-focus">
-    <div class="stat"><div id="statCount" class="value">0</div><div class="name">Total (1 hr)</div></div>
-    <div class="stat"><div id="statFreq" class="value">--</div><div class="name">Avg Frequency</div></div>
-    <div class="stat"><div id="statDur" class="value">--</div><div class="name">Avg Duration</div></div>
-    <div class="stat"><div id="statLast" class="value">--</div><div class="name">Since Last</div></div>
+    <div class="stat"><div id="statCount" class="value">0</div><div class="name" data-i18n="totalHr">Total (1 hr)</div></div>
+    <div class="stat"><div id="statFreq" class="value">--</div><div class="name" data-i18n="avgFreq">Avg Frequency</div></div>
+    <div class="stat"><div id="statDur" class="value">--</div><div class="name" data-i18n="avgDur">Avg Duration</div></div>
+    <div class="stat"><div id="statLast" class="value">--</div><div class="name" data-i18n="sinceLast">Since Last</div></div>
   </div>
 
   <div class="rule-row hide-in-focus">
-    Go-time rule:
+    <span data-i18n="goTimeRule">Go-time rule:</span>
     <select id="ruleSelect">
       <option value="5">5-1-1</option>
       <option value="4">4-1-1</option>
@@ -324,25 +323,25 @@
   </div>
 
   <div class="history-header hide-in-focus">
-    <h2>History</h2>
+    <h2 data-i18n="history">History</h2>
   </div>
 
   <div class="actions hide-in-focus">
-    <button id="addBtn" class="btn-small">＋ Add</button>
-    <button id="summaryBtn" class="btn-small">Summary</button>
-    <button id="exportBtn" class="btn-small">Export</button>
-    <button id="clearBtn" class="btn-small">Clear</button>
+    <button id="addBtn" class="btn-small" data-i18n="add">＋ Add</button>
+    <button id="summaryBtn" class="btn-small" data-i18n="summary">Summary</button>
+    <button id="exportBtn" class="btn-small" data-i18n="exportL">Export</button>
+    <button id="clearBtn" class="btn-small" data-i18n="clear">Clear</button>
   </div>
 
   <div class="view-toggle hide-in-focus">
-    <button id="viewList" class="seg on">📋 List</button>
-    <button id="viewGraph" class="seg">📊 Graph</button>
+    <button id="viewList" class="seg on" data-i18n="list">📋 List</button>
+    <button id="viewGraph" class="seg" data-i18n="graph">📊 Graph</button>
   </div>
 
   <div id="listView" class="hide-in-focus">
     <table>
       <thead>
-        <tr><th>#</th><th>Time</th><th>Duration</th><th>Freq</th><th>Int.</th><th></th></tr>
+        <tr><th data-i18n="thNum">#</th><th data-i18n="thTime">Time</th><th data-i18n="thDur">Duration</th><th data-i18n="thFreq">Freq</th><th data-i18n="thInt">Int.</th><th></th></tr>
       </thead>
       <tbody id="historyBody"></tbody>
     </table>
@@ -352,15 +351,15 @@
     <div class="chart-controls">
       <button id="zoomOut" class="zoom-btn">−</button>
       <button id="zoomIn" class="zoom-btn">+</button>
-      <button id="zoomFit" class="btn-small">Fit</button>
+      <button id="zoomFit" class="btn-small" data-i18n="fit">Fit</button>
       <span class="spacer"></span>
-      <span class="lbl">tap a bar to edit</span>
+      <span class="lbl" data-i18n="tapBarEdit">tap a bar to edit</span>
     </div>
     <div class="chart-wrap">
       <div id="yAxis" class="y-axis"></div>
       <div id="chartScroll" class="chart-scroll"><canvas id="chart"></canvas></div>
     </div>
-    <div class="chart-hint">Each column is a contraction · width = duration · height &amp; colour = intensity · pinch or use −/+ to zoom</div>
+    <div class="chart-hint" data-i18n="chartHint">Each column is a contraction · width = duration · height &amp; colour = intensity · pinch or use −/+ to zoom</div>
   </div>
 
   <script>
@@ -373,7 +372,7 @@
     let activeStart = null;
     let tickInterval = null;
     let editingIndex = null;            // index currently shown in the detail panel
-    let settings = { keepAwake: false, sound: true, ruleGapMin: 5 };
+    let settings = { keepAwake: false, sound: true, ruleGapMin: 5, lang: 'en' };
     let wakeLock = null;
     let view = 'list';                  // 'list' | 'graph'
     let pxPerMin = 30;                  // graph zoom (horizontal scale)
@@ -383,6 +382,103 @@
     let suppressAlert = true;           // don't fire the alert on first render/load
     let notifyAsked = false;
 
+    // ---------- i18n ----------
+    const I18N = {
+      en: {
+        title: '🤰 Contraction Tracker',
+        subtitle: 'Tap to start when a contraction begins, tap again when it ends.',
+        startContraction: 'Start Contraction', tapToStop: 'Tap to Stop',
+        contractionWord: 'Contraction',
+        baseline: 'First contraction — sets the baseline. On the next ones, tap to describe how they compare.',
+        weaker: 'Weaker', same: 'Same', stronger: 'Stronger',
+        intHint: 'Tap more than once for a bigger change — e.g. ++ much stronger, −−− much weaker.',
+        start: 'Start', end: 'End', duration: 'Duration',
+        chipBack: 'Back labor', chipWater: 'Water broke', chipShow: 'Bloody show', chipNausea: 'Nausea', chipPlug: 'Mucus plug',
+        notePh: 'Optional note (e.g. felt in back, took a walk…)', done: 'Done',
+        totalHr: 'Total (1 hr)', avgFreq: 'Avg Frequency', avgDur: 'Avg Duration', sinceLast: 'Since Last',
+        sinceLastSmall: 'since last', lastLasted: 'last lasted',
+        breatheIn: 'Breathe in…', breatheOut: 'Breathe out…',
+        goTimeRule: 'Go-time rule:', keepScreenOn: 'Keep screen on', screenOnNa: 'Screen on (n/a)',
+        sound: 'Sound', soundNa: 'Sound (n/a)',
+        history: 'History', add: '＋ Add', summary: 'Summary', exportL: 'Export', clear: 'Clear',
+        list: '📋 List', graph: '📊 Graph', fit: 'Fit', tapBarEdit: 'tap a bar to edit',
+        chartHint: 'Each column is a contraction · width = duration · height & colour = intensity · pinch or use −/+ to zoom',
+        thNum: '#', thTime: 'Time', thDur: 'Duration', thFreq: 'Freq', thInt: 'Int.',
+        empty: 'No contractions logged yet.', focus: 'Focus', exit: 'Exit', undo: 'Undo',
+        loggedT: 'Contraction logged', deletedT: 'Contraction deleted', clearedT: 'All contractions cleared', addedT: 'Contraction added',
+        soundOnT: 'Sound on', soundOffT: 'Sound off', noSoundT: 'This browser can’t play sound',
+        wakeNaT: 'Screen-lock control needs the app served over https',
+        nothingExportT: 'Nothing to export yet', csvDownT: 'CSV downloaded', copiedT: 'Copied', selectCopyT: 'Select text to copy',
+        nothingSummT: 'Nothing to summarise yet', invalidAddT: 'Enter a valid start time and duration',
+        copyLogTitle: 'Copy your log', summaryTitle: 'Contraction summary', copy: 'Copy', close: 'Close',
+        addTitle: 'Add a contraction', lasted: 'Lasted', minU: 'min', secU: 'sec', cancel: 'Cancel',
+        confirmClear: 'Delete all logged contractions?',
+        alertTpl: '⚠️ {rule} pattern reached — contractions ~{gap} min apart, lasting ~1 min, for 1 hour. Consider contacting your provider.',
+        notifyTitle: '{rule} pattern reached', notifyBody: 'Time to consider contacting your provider.',
+        sumHeader: '🤰 Contraction update — {time}', sumTotal: 'Total: {n} contractions over {dur}',
+        sumLastHour: 'Last hour: {n} contractions', sumAvgFreq: 'Avg frequency: {v} apart (start-to-start)',
+        sumAvgDur: 'Avg duration: {v}', sumRule: 'Go-time rule {rule}: {status}', sumMet: 'MET ✅', sumNotYet: 'not yet',
+        sumLastN: 'Last {n}:', sumLasted: 'lasted {v}', sumApart: '{v} apart', sumNoData: 'No contractions logged yet.',
+        csvHead: ['#','Date','Start','End','Duration (mm:ss)','Duration (s)','Frequency (mm:ss)','Intensity vs prev','Note'],
+      },
+      fr: {
+        title: '🤰 Suivi des contractions',
+        subtitle: 'Touchez pour démarrer au début d’une contraction, touchez à nouveau à la fin.',
+        startContraction: 'Démarrer la contraction', tapToStop: 'Touchez pour arrêter',
+        contractionWord: 'Contraction',
+        baseline: 'Première contraction — sert de référence. Sur les suivantes, touchez pour décrire la comparaison.',
+        weaker: 'Plus faible', same: 'Identique', stronger: 'Plus forte',
+        intHint: 'Touchez plusieurs fois pour un plus grand écart — p. ex. ++ bien plus forte, −−− bien plus faible.',
+        start: 'Début', end: 'Fin', duration: 'Durée',
+        chipBack: 'Mal de dos', chipWater: 'Perte des eaux', chipShow: 'Pertes sanglantes', chipNausea: 'Nausée', chipPlug: 'Bouchon muqueux',
+        notePh: 'Note facultative (p. ex. ressentie dans le dos, marche…)', done: 'Terminé',
+        totalHr: 'Total (1 h)', avgFreq: 'Fréquence moy.', avgDur: 'Durée moy.', sinceLast: 'Depuis la dernière',
+        sinceLastSmall: 'depuis la dernière', lastLasted: 'dernière durée',
+        breatheIn: 'Inspirez…', breatheOut: 'Expirez…',
+        goTimeRule: 'Règle de départ :', keepScreenOn: 'Garder l’écran allumé', screenOnNa: 'Écran allumé (n/d)',
+        sound: 'Son', soundNa: 'Son (n/d)',
+        history: 'Historique', add: '＋ Ajouter', summary: 'Résumé', exportL: 'Exporter', clear: 'Effacer',
+        list: '📋 Liste', graph: '📊 Graphique', fit: 'Ajuster', tapBarEdit: 'touchez une barre pour modifier',
+        chartHint: 'Chaque colonne est une contraction · largeur = durée · hauteur et couleur = intensité · pincez ou utilisez −/+ pour zoomer',
+        thNum: 'n°', thTime: 'Heure', thDur: 'Durée', thFreq: 'Fréq.', thInt: 'Int.',
+        empty: 'Aucune contraction enregistrée.', focus: 'Focus', exit: 'Quitter', undo: 'Annuler',
+        loggedT: 'Contraction enregistrée', deletedT: 'Contraction supprimée', clearedT: 'Toutes les contractions effacées', addedT: 'Contraction ajoutée',
+        soundOnT: 'Son activé', soundOffT: 'Son désactivé', noSoundT: 'Ce navigateur ne peut pas jouer de son',
+        wakeNaT: 'Le maintien de l’écran nécessite l’appli servie en https',
+        nothingExportT: 'Rien à exporter pour l’instant', csvDownT: 'CSV téléchargé', copiedT: 'Copié', selectCopyT: 'Sélectionnez le texte à copier',
+        nothingSummT: 'Rien à résumer pour l’instant', invalidAddT: 'Entrez une heure de début et une durée valides',
+        copyLogTitle: 'Copiez votre journal', summaryTitle: 'Résumé des contractions', copy: 'Copier', close: 'Fermer',
+        addTitle: 'Ajouter une contraction', lasted: 'Durée', minU: 'min', secU: 's', cancel: 'Annuler',
+        confirmClear: 'Supprimer toutes les contractions enregistrées ?',
+        alertTpl: '⚠️ Schéma {rule} atteint — contractions à ~{gap} min d’intervalle, durant ~1 min, pendant 1 heure. Envisagez de contacter votre sage-femme/médecin.',
+        notifyTitle: 'Schéma {rule} atteint', notifyBody: 'Il est temps d’envisager de contacter votre sage-femme/médecin.',
+        sumHeader: '🤰 Point contractions — {time}', sumTotal: 'Total : {n} contractions sur {dur}',
+        sumLastHour: 'Dernière heure : {n} contractions', sumAvgFreq: 'Fréquence moy. : {v} d’intervalle (début à début)',
+        sumAvgDur: 'Durée moy. : {v}', sumRule: 'Règle de départ {rule} : {status}', sumMet: 'ATTEINTE ✅', sumNotYet: 'pas encore',
+        sumLastN: '{n} dernières :', sumLasted: 'durée {v}', sumApart: '{v} d’intervalle', sumNoData: 'Aucune contraction enregistrée.',
+        csvHead: ['n°','Date','Début','Fin','Durée (mm:ss)','Durée (s)','Fréquence (mm:ss)','Intensité vs préc.','Note'],
+      },
+    };
+    function t(key, vars) {
+      const lang = I18N[settings.lang] ? settings.lang : 'en';
+      let s = I18N[lang][key];
+      if (s == null) s = I18N.en[key];
+      if (s == null) return key;
+      if (vars && typeof s === 'string') s = s.replace(/\{(\w+)\}/g, (_, k) => (vars[k] != null ? vars[k] : ''));
+      return s;
+    }
+    function applyLang() {
+      document.documentElement.lang = settings.lang;
+      document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+      document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+      document.getElementById('langBtn').textContent = settings.lang === 'en' ? 'FR' : 'EN';
+      focusBtn.textContent = document.body.classList.contains('focus') ? t('exit') : t('focus');
+      renderToggles();
+      renderTimerState();
+      if (editingIndex !== null) detailNum.textContent = (settings.lang === 'fr' ? 'n° ' : '#') + (editingIndex + 1);
+      renderAll();
+    }
+
     // ---------- persistence ----------
     function load() {
       try { contractions = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { contractions = []; }
@@ -391,7 +487,9 @@
       contractions.forEach(c => { if (typeof c.intensity === 'string') c.intensity = MAP[c.intensity] ?? null; });
       const a = localStorage.getItem(ACTIVE_KEY);
       activeStart = a ? parseInt(a, 10) : null;
-      try { Object.assign(settings, JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}); } catch {}
+      const stored = localStorage.getItem(SETTINGS_KEY);
+      if (stored) { try { Object.assign(settings, JSON.parse(stored)); } catch {} }
+      else if (/^fr/i.test(navigator.language || '')) settings.lang = 'fr';   // first run: match device
     }
     function save() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(contractions));
@@ -479,7 +577,7 @@
           const before = JSON.stringify(contractions);
           contractions.push({ start, end, intensity: null, note: '' });
           save(); renderAll();
-          offerUndo(before, 'Contraction logged');
+          offerUndo(before, t('loggedT'));
           maybeRequestNotify();
           openDetail(contractions.length - 1);   // prompt for intensity/note
         } else {
@@ -493,11 +591,11 @@
       document.body.classList.toggle('contracting', active);
       if (!active) {
         timerBtn.classList.remove('active');
-        timerLabel.textContent = 'Start Contraction';
+        timerLabel.textContent = t('startContraction');
         timerDisplay.textContent = '0:00';
       } else {
         timerBtn.classList.add('active');
-        timerLabel.textContent = 'Tap to Stop';
+        timerLabel.textContent = t('tapToStop');
         updateTick();
       }
     }
@@ -516,7 +614,7 @@
     function openDetail(i) {
       editingIndex = i;
       const c = contractions[i];
-      detailNum.textContent = '#' + (i + 1);
+      detailNum.textContent = (settings.lang === 'fr' ? 'n° ' : '#') + (i + 1);
       baselineNote.classList.toggle('hidden', i !== 0);
       updateReadout();
       updateTimingDisplay();
@@ -588,12 +686,12 @@
     function updateChips() {
       if (editingIndex === null) return;
       const parts = noteParts(contractions[editingIndex].note);
-      chipsEl.querySelectorAll('.chip').forEach(ch => ch.classList.toggle('on', parts.includes(ch.dataset.tag)));
+      chipsEl.querySelectorAll('.chip').forEach(ch => ch.classList.toggle('on', parts.includes(t(ch.dataset.tag))));
     }
     chipsEl.querySelectorAll('.chip').forEach(ch => {
       ch.addEventListener('click', () => {
         if (editingIndex === null) return;
-        const tag = ch.dataset.tag;
+        const tag = t(ch.dataset.tag);
         const parts = noteParts(contractions[editingIndex].note);
         const idx = parts.indexOf(tag);
         if (idx >= 0) parts.splice(idx, 1); else parts.push(tag);
@@ -626,7 +724,7 @@
       const body = document.getElementById('historyBody');
       body.innerHTML = '';
       if (contractions.length === 0) {
-        body.innerHTML = '<tr><td colspan="6" class="empty">No contractions logged yet.</td></tr>';
+        body.innerHTML = '<tr><td colspan="6" class="empty">' + t('empty') + '</td></tr>';
       } else {
         for (let i = contractions.length - 1; i >= 0; i--) {
           const c = contractions[i];
@@ -656,7 +754,7 @@
             contractions.splice(i, 1);
             if (editingIndex === i) { editingIndex = null; detailPanel.classList.add('hidden'); }
             save(); renderAll();
-            offerUndo(before, 'Contraction deleted');
+            offerUndo(before, t('deletedT'));
           });
         });
       }
@@ -722,11 +820,10 @@
       const rule = settings.ruleGapMin + '-1-1';
       const alertEl = document.getElementById('alert511');
       alertEl.classList.toggle('hidden', !met);
-      alertEl.innerHTML = '⚠️ ' + rule + ' pattern reached — contractions ~' + settings.ruleGapMin +
-        ' min apart, lasting ~1 min, for 1 hour. Consider contacting your provider.';
+      alertEl.textContent = t('alertTpl', { rule, gap: settings.ruleGapMin });
       if (met && !patternWasMet && !suppressAlert) {
         chime('alert');
-        notify(rule + ' pattern reached', 'Time to consider contacting your provider.');
+        notify(t('notifyTitle', { rule }), t('notifyBody'));
       }
       patternWasMet = met;
     }
@@ -760,21 +857,21 @@
     function renderToggles() {
       toggleWake.classList.toggle('on', settings.keepAwake && wakeSupported);
       toggleWake.classList.toggle('na', !wakeSupported);
-      wakeLabel.textContent = wakeSupported ? 'Keep screen on' : 'Screen on (n/a)';
+      wakeLabel.textContent = wakeSupported ? t('keepScreenOn') : t('screenOnNa');
       toggleSound.classList.toggle('on', settings.sound && soundSupported);
       toggleSound.classList.toggle('na', !soundSupported);
-      soundLabel.textContent = soundSupported ? 'Sound' : 'Sound (n/a)';
+      soundLabel.textContent = soundSupported ? t('sound') : t('soundNa');
     }
     toggleWake.addEventListener('click', () => {
-      if (!wakeSupported) { showToast('Screen-lock control needs the app served over https'); return; }
+      if (!wakeSupported) { showToast(t('wakeNaT')); return; }
       settings.keepAwake = !settings.keepAwake; saveSettings(); renderToggles();
       if (settings.keepAwake) requestWake(); else releaseWake();
     });
     toggleSound.addEventListener('click', () => {
-      if (!soundSupported) { showToast('This browser can’t play sound'); return; }
+      if (!soundSupported) { showToast(t('noSoundT')); return; }
       settings.sound = !settings.sound; saveSettings(); renderToggles();
-      if (settings.sound) { chime('start'); showToast('Sound on'); }
-      else { showToast('Sound off'); }
+      if (settings.sound) { chime('start'); showToast(t('soundOnT')); }
+      else { showToast(t('soundOffT')); }
     });
 
     // go-time rule selector
@@ -790,13 +887,20 @@
     const focusBtn = document.getElementById('focusBtn');
     focusBtn.addEventListener('click', () => {
       const on = document.body.classList.toggle('focus');
-      focusBtn.textContent = on ? 'Exit' : 'Focus';
+      focusBtn.textContent = on ? t('exit') : t('focus');
       focusBtn.classList.toggle('btn-primary', on);
+    });
+
+    // language toggle
+    document.getElementById('langBtn').addEventListener('click', () => {
+      settings.lang = settings.lang === 'en' ? 'fr' : 'en';
+      saveSettings();
+      applyLang();
     });
 
     // ---------- export ----------
     function buildCSV() {
-      const rows = [['#','Date','Start','End','Duration (mm:ss)','Duration (s)','Frequency (mm:ss)','Intensity vs prev','Note']];
+      const rows = [t('csvHead').slice()];
       contractions.forEach((c, i) => {
         const dur = c.end - c.start;
         const freq = i > 0 ? c.start - contractions[i - 1].start : '';
@@ -817,7 +921,7 @@
 
     const exportBtn = document.getElementById('exportBtn');
     exportBtn.addEventListener('click', () => {
-      if (contractions.length === 0) { showToast('Nothing to export yet'); return; }
+      if (contractions.length === 0) { showToast(t('nothingExportT')); return; }
       const csv = buildCSV();
       const fname = 'contractions-' + new Date().toISOString().slice(0, 10) + '.csv';
 
@@ -838,9 +942,9 @@
         a.href = url; a.download = fname;
         document.body.appendChild(a); a.click(); a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
-        showToast('CSV downloaded');
+        showToast(t('csvDownT'));
       } catch {
-        showTextModal('Copy your log', csv);   // last resort: show text to copy manually
+        showTextModal(t('copyLogTitle'), csv);   // last resort: show text to copy manually
       }
     }
 
@@ -851,15 +955,17 @@
         '<div class="modal"><h3></h3>' +
         '<textarea readonly></textarea>' +
         '<div class="modal-actions">' +
-        '<button class="btn-primary" id="mCopy">Copy</button>' +
-        '<button class="btn-small" id="mClose">Close</button></div></div>';
+        '<button class="btn-primary" id="mCopy"></button>' +
+        '<button class="btn-small" id="mClose"></button></div></div>';
       overlay.querySelector('h3').textContent = title;
+      overlay.querySelector('#mCopy').textContent = t('copy');
+      overlay.querySelector('#mClose').textContent = t('close');
       const ta = overlay.querySelector('textarea');
       ta.value = text;
       overlay.querySelector('#mClose').addEventListener('click', () => overlay.remove());
       overlay.querySelector('#mCopy').addEventListener('click', () => {
         ta.select(); ta.setSelectionRange(0, 99999);
-        try { document.execCommand('copy'); showToast('Copied'); } catch { showToast('Select text to copy'); }
+        try { document.execCommand('copy'); showToast(t('copiedT')); } catch { showToast(t('selectCopyT')); }
       });
       overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
       document.body.appendChild(overlay);
@@ -872,33 +978,33 @@
     }
     function buildSummary() {
       const n = contractions.length;
-      if (!n) return 'No contractions logged yet.';
+      if (!n) return t('sumNoData');
       const now = Date.now();
       const recent = contractions.filter(c => c.start >= now - 3600000);
       const lines = [];
-      lines.push('🤰 Contraction update — ' + fmtClock(now));
-      lines.push('Total: ' + n + ' contractions over ' + fmtLong(now - contractions[0].start));
-      lines.push('Last hour: ' + recent.length + ' contractions');
+      lines.push(t('sumHeader', { time: fmtClock(now) }));
+      lines.push(t('sumTotal', { n, dur: fmtLong(now - contractions[0].start) }));
+      lines.push(t('sumLastHour', { n: recent.length }));
       const fset = recent.length >= 2 ? recent : contractions;
-      if (fset.length >= 2) lines.push('Avg frequency: ' + fmtDuration(avg(gapsOf(fset))) + ' apart (start-to-start)');
+      if (fset.length >= 2) lines.push(t('sumAvgFreq', { v: fmtDuration(avg(gapsOf(fset))) }));
       const dset = recent.length ? recent : contractions;
-      lines.push('Avg duration: ' + fmtDuration(avg(durationsOf(dset))));
-      lines.push('Go-time rule ' + settings.ruleGapMin + '-1-1: ' + (patternMet() ? 'MET ✅' : 'not yet'));
+      lines.push(t('sumAvgDur', { v: fmtDuration(avg(durationsOf(dset))) }));
+      lines.push(t('sumRule', { rule: settings.ruleGapMin + '-1-1', status: patternMet() ? t('sumMet') : t('sumNotYet') }));
       lines.push('');
-      lines.push('Last ' + Math.min(5, n) + ':');
+      lines.push(t('sumLastN', { n: Math.min(5, n) }));
       for (let i = n - 1; i >= Math.max(0, n - 5); i--) {
         const c = contractions[i];
-        const freq = i > 0 ? ' · ' + fmtDuration(c.start - contractions[i - 1].start) + ' apart' : '';
-        lines.push('• ' + fmtClock(c.start) + ' · lasted ' + fmtDuration(c.end - c.start) + freq +
+        const freq = i > 0 ? ' · ' + t('sumApart', { v: fmtDuration(c.start - contractions[i - 1].start) }) : '';
+        lines.push('• ' + fmtClock(c.start) + ' · ' + t('sumLasted', { v: fmtDuration(c.end - c.start) }) + freq +
           (c.note ? ' · ' + c.note : ''));
       }
       return lines.join('\n');
     }
     document.getElementById('summaryBtn').addEventListener('click', () => {
-      if (contractions.length === 0) { showToast('Nothing to summarise yet'); return; }
+      if (contractions.length === 0) { showToast(t('nothingSummT')); return; }
       const text = buildSummary();
-      if (navigator.share) navigator.share({ text }).catch(() => showTextModal('Contraction summary', text));
-      else showTextModal('Contraction summary', text);
+      if (navigator.share) navigator.share({ text }).catch(() => showTextModal(t('summaryTitle'), text));
+      else showTextModal(t('summaryTitle'), text);
     });
 
     // ---------- add a missed contraction ----------
@@ -910,14 +1016,14 @@
       const localStart = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
         'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
       overlay.innerHTML =
-        '<div class="modal"><h3>Add a contraction</h3>' +
-        '<div class="timing-row"><span class="tlabel">Start</span>' +
+        '<div class="modal"><h3>' + t('addTitle') + '</h3>' +
+        '<div class="timing-row"><span class="tlabel">' + t('start') + '</span>' +
         '<input id="aStart" type="datetime-local" class="note-input" style="min-height:auto" value="' + localStart + '"></div>' +
-        '<div class="timing-row" style="margin-top:10px"><span class="tlabel">Lasted</span>' +
-        '<input id="aMin" type="number" min="0" max="59" value="1" class="note-input" style="min-height:auto;width:64px;text-align:center"> min ' +
-        '<input id="aSec" type="number" min="0" max="59" value="0" class="note-input" style="min-height:auto;width:64px;text-align:center"> sec</div>' +
-        '<div class="modal-actions"><button class="btn-primary" id="aSave">Add</button>' +
-        '<button class="btn-small" id="aCancel">Cancel</button></div></div>';
+        '<div class="timing-row" style="margin-top:10px"><span class="tlabel">' + t('lasted') + '</span>' +
+        '<input id="aMin" type="number" min="0" max="59" value="1" class="note-input" style="min-height:auto;width:64px;text-align:center"> ' + t('minU') + ' ' +
+        '<input id="aSec" type="number" min="0" max="59" value="0" class="note-input" style="min-height:auto;width:64px;text-align:center"> ' + t('secU') + '</div>' +
+        '<div class="modal-actions"><button class="btn-primary" id="aSave">' + t('add') + '</button>' +
+        '<button class="btn-small" id="aCancel">' + t('cancel') + '</button></div></div>';
       overlay.querySelector('#aCancel').addEventListener('click', () => overlay.remove());
       overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
       overlay.querySelector('#aSave').addEventListener('click', () => {
@@ -925,13 +1031,13 @@
         const mins = parseInt(overlay.querySelector('#aMin').value, 10) || 0;
         const secs = parseInt(overlay.querySelector('#aSec').value, 10) || 0;
         const durMs = (mins * 60 + secs) * 1000;
-        if (isNaN(start) || durMs < 1000) { showToast('Enter a valid start time and duration'); return; }
+        if (isNaN(start) || durMs < 1000) { showToast(t('invalidAddT')); return; }
         const before = JSON.stringify(contractions);
         contractions.push({ start, end: start + durMs, intensity: null, note: '' });
         contractions.sort((a, b) => a.start - b.start);
         save(); renderAll();
         overlay.remove();
-        offerUndo(before, 'Contraction added');
+        offerUndo(before, t('addedT'));
         openDetail(contractions.findIndex(c => c.start === start));
       });
       document.body.appendChild(overlay);
@@ -958,7 +1064,7 @@
       toastTimer = setTimeout(() => t.remove(), action ? 6000 : 1800);
     }
     function offerUndo(prevSnapshot, label) {
-      showToast(label, { label: 'Undo', cb: () => {
+      showToast(label, { label: t('undo'), cb: () => {
         contractions = JSON.parse(prevSnapshot);
         editingIndex = null;
         detailPanel.classList.add('hidden');
@@ -1146,11 +1252,11 @@
     // ---------- clear ----------
     document.getElementById('clearBtn').addEventListener('click', () => {
       if (contractions.length === 0) return;
-      if (confirm('Delete all logged contractions?')) {
+      if (confirm(t('confirmClear'))) {
         const before = JSON.stringify(contractions);
         contractions = []; editingIndex = null; detailPanel.classList.add('hidden');
         save(); renderAll();
-        offerUndo(before, 'All contractions cleared');
+        offerUndo(before, t('clearedT'));
       }
     });
 
@@ -1165,10 +1271,8 @@
     // ---------- init ----------
     load();
     ruleSelect.value = String([3, 4, 5].includes(settings.ruleGapMin) ? settings.ruleGapMin : 5);
-    renderToggles();
-    renderTimerState();
+    applyLang();             // sets language + renders toggles, timer, history
     if (activeStart !== null) { startTick(); requestWake(); }
-    renderAll();
     suppressAlert = false;   // allow the go-time alert to fire on future transitions
   </script>
 </body>
