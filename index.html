@@ -1328,6 +1328,13 @@
     // ---------- service worker (only over http/https) ----------
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
       navigator.serviceWorker.register('sw.js').catch(() => {});
+      // When an updated service worker takes control, reload once to show the new version.
+      let reloading = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (reloading) return;
+        reloading = true;
+        location.reload();
+      });
     }
 
     // ---------- init ----------

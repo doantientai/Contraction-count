@@ -1,6 +1,7 @@
 /* Service worker — only used when the app is served over http(s).
-   Caches everything so the installed app works fully offline. */
-const CACHE = 'contractions-v3';
+   Caches everything so the installed app works fully offline, but fetches a
+   fresh page when online so updates actually reach the user. */
+const CACHE = 'contractions-v4';
 const ASSETS = ['./', './index.html', './manifest.json', './icon.svg', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (e) => {
@@ -12,24 +13,39 @@ self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-    )
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (e) => {
-  if (e.request.method !== 'GET') return;
+  const req = e.request;
+  if (req.method !== 'GET') return;
+
+  // Page navigations (the HTML): network-first so a new deploy shows up when
+  // online; fall back to the cached page when offline.
+  if (req.mode === 'navigate') {
+    e.respondWith(
+      fetch(req)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put('./index.html', copy)).catch(() => {});
+          return res;
+        })
+        .catch(() => caches.match('./index.html').then((c) => c || caches.match('./')))
+    );
+    return;
+  }
+
+  // Other assets: cache-first, then network (and cache what we fetch).
   e.respondWith(
-    caches.match(e.request).then(
+    caches.match(req).then(
       (cached) =>
         cached ||
-        fetch(e.request)
-          .then((res) => {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
-            return res;
-          })
-          .catch(() => caches.match('./index.html'))
+        fetch(req).then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+          return res;
+        })
     )
   );
 });
