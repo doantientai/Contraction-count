@@ -165,16 +165,93 @@
     .chart-scroll { overflow-x: auto; overflow-y: hidden; flex: 1; -webkit-overflow-scrolling: touch; touch-action: pan-x; }
     canvas#chart { display: block; height: 280px; }
     .chart-hint { color: var(--muted); font-size: 0.74rem; text-align: center; margin: 8px 0 80px; line-height: 1.5; }
+
+    /* Top bar + focus mode */
+    .topbar { display: flex; align-items: center; gap: 8px; margin: 8px 0 4px; }
+    .topbar h1 { flex: 1; margin: 0; }
+    .focus-btn { flex: 0 0 auto; }
+    .focus-only { display: none; }
+    body.focus .hide-in-focus { display: none !important; }
+    body.focus .focus-only { display: flex; }
+    body.focus .timer-btn { padding: 60px 16px; }
+    body.focus .timer-display { font-size: 3.2rem; }
+    .focus-stats { justify-content: space-around; gap: 16px; margin: 20px 0; text-align: center; }
+    .focus-stats > div { flex: 1; }
+    .focus-stats .v { display: block; font-size: 1.9rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .focus-stats small { color: var(--muted); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* Breathing pacer */
+    #breath { display: none; flex-direction: column; align-items: center; margin-top: 18px; }
+    body.contracting #breath { display: flex; }
+    .breath-circle { width: 130px; height: 130px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(248,113,113,0.55), rgba(239,68,68,0.12) 70%);
+      animation: breathe 10s ease-in-out infinite; }
+    @keyframes breathe { 0% { transform: scale(0.55); } 40% { transform: scale(1); } 100% { transform: scale(0.55); } }
+    .breath-label { position: relative; height: 1.3em; width: 100%; text-align: center; margin-top: 12px; color: var(--text); font-size: 0.95rem; font-weight: 600; }
+    .breath-label span { position: absolute; left: 0; right: 0; opacity: 0; }
+    .breath-in { animation: lblIn 10s ease-in-out infinite; }
+    .breath-out { animation: lblOut 10s ease-in-out infinite; }
+    @keyframes lblIn { 0% { opacity: 1; } 38% { opacity: 1; } 43% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes lblOut { 0% { opacity: 0; } 38% { opacity: 0; } 43% { opacity: 1; } 97% { opacity: 1; } 100% { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { .breath-circle { animation: none; transform: scale(0.8); } .breath-in, .breath-out { animation: none; } .breath-in { opacity: 1; } }
+
+    /* Quick-note chips */
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .chip { border: 1px solid rgba(255,255,255,0.18); background: var(--card2); color: var(--muted);
+      border-radius: 999px; padding: 6px 12px; font-size: 0.8rem; cursor: pointer; }
+    .chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* Timing editor */
+    .timing { background: var(--card2); border-radius: 12px; padding: 10px; margin: 10px 0; }
+    .timing-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+    .timing-row:last-child { margin-bottom: 0; }
+    .timing-row .tlabel { width: 42px; color: var(--muted); font-size: 0.78rem; }
+    .timing-row .tval { flex: 1; text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; font-size: 0.9rem; }
+    .tbtn { border: 1px solid rgba(255,255,255,0.18); background: transparent; color: var(--text);
+      border-radius: 8px; padding: 6px 8px; font-size: 0.74rem; cursor: pointer; min-width: 38px; }
+    .tbtn:active { background: var(--accent); border-color: var(--accent); }
+    .timing-dur { text-align: center; color: var(--muted); font-size: 0.82rem; margin-top: 8px; }
+    .timing-dur b { color: var(--text); }
+
+    /* Rule selector */
+    .rule-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin: -6px 0 16px; color: var(--muted); font-size: 0.82rem; }
+    .rule-row select { background: var(--card2); color: var(--text); border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 10px; padding: 6px 10px; font-size: 0.85rem; }
+
+    /* Action row + trend + toast action */
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .actions .btn-small { flex: 1; min-width: 70px; text-align: center; }
+    .trend { font-size: 0.95rem; margin-left: 4px; }
+    .trend.good { color: var(--good); }
+    .trend.muted { color: var(--muted); }
+    .toast-action { background: rgba(0,0,0,0.18); border: none; color: inherit; font-weight: 700;
+      border-radius: 999px; padding: 4px 12px; margin-left: 10px; cursor: pointer; }
   </style>
 </head>
 <body>
-  <h1>🤰 Contraction Tracker</h1>
-  <div class="subtitle">Tap to start when a contraction begins, tap again when it ends.</div>
+  <div class="topbar">
+    <h1>🤰 Contraction Tracker</h1>
+    <button id="focusBtn" class="btn-small focus-btn">Focus</button>
+  </div>
+  <div class="subtitle hide-in-focus">Tap to start when a contraction begins, tap again when it ends.</div>
 
   <button id="timerBtn" class="timer-btn">
     <span id="timerLabel" class="timer-label">Start Contraction</span>
     <span id="timerDisplay" class="timer-display">0:00</span>
   </button>
+
+  <div id="breath">
+    <div class="breath-circle"></div>
+    <div class="breath-label">
+      <span class="breath-in">Breathe in…</span>
+      <span class="breath-out">Breathe out…</span>
+    </div>
+  </div>
+
+  <div id="focusStats" class="stats focus-only focus-stats">
+    <div><span id="fSince" class="v">--</span><small>since last</small></div>
+    <div><span id="fLast" class="v">--</span><small>last lasted</small></div>
+  </div>
 
   <!-- intensity + note panel (shown after a contraction, or when editing a row) -->
   <div id="detailPanel" class="panel hidden">
@@ -187,7 +264,35 @@
       <button class="int-btn" data-delta="1"><span class="ico">+</span>Stronger</button>
     </div>
     <div class="int-hint">Tap more than once for a bigger change — e.g. ++ much stronger, −−− much weaker.</div>
-    <textarea id="noteInput" class="note-input" placeholder="Optional note (e.g. felt in back, water broke, took a walk…)"></textarea>
+
+    <div class="timing">
+      <div class="timing-row">
+        <span class="tlabel">Start</span>
+        <button class="tbtn" data-edit="start" data-step="-60">−1m</button>
+        <button class="tbtn" data-edit="start" data-step="-5">−5s</button>
+        <span id="editStart" class="tval">--</span>
+        <button class="tbtn" data-edit="start" data-step="5">+5s</button>
+        <button class="tbtn" data-edit="start" data-step="60">+1m</button>
+      </div>
+      <div class="timing-row">
+        <span class="tlabel">End</span>
+        <button class="tbtn" data-edit="end" data-step="-60">−1m</button>
+        <button class="tbtn" data-edit="end" data-step="-5">−5s</button>
+        <span id="editEnd" class="tval">--</span>
+        <button class="tbtn" data-edit="end" data-step="5">+5s</button>
+        <button class="tbtn" data-edit="end" data-step="60">+1m</button>
+      </div>
+      <div class="timing-dur">Duration <b id="editDur">--</b></div>
+    </div>
+
+    <div id="chips" class="chips">
+      <button class="chip" data-tag="Back labor">Back labor</button>
+      <button class="chip" data-tag="Water broke">Water broke</button>
+      <button class="chip" data-tag="Bloody show">Bloody show</button>
+      <button class="chip" data-tag="Nausea">Nausea</button>
+      <button class="chip" data-tag="Mucus plug">Mucus plug</button>
+    </div>
+    <textarea id="noteInput" class="note-input" placeholder="Optional note (e.g. felt in back, took a walk…)"></textarea>
     <div class="panel-actions">
       <button id="detailDone" class="btn-primary">Done</button>
     </div>
@@ -197,30 +302,44 @@
     ⚠️ 5-1-1 pattern reached — contractions ~5 min apart, lasting ~1 min, for 1 hour. Consider contacting your provider.
   </div>
 
-  <div class="stats">
+  <div class="stats hide-in-focus">
     <div class="stat"><div id="statCount" class="value">0</div><div class="name">Total (1 hr)</div></div>
     <div class="stat"><div id="statFreq" class="value">--</div><div class="name">Avg Frequency</div></div>
     <div class="stat"><div id="statDur" class="value">--</div><div class="name">Avg Duration</div></div>
     <div class="stat"><div id="statLast" class="value">--</div><div class="name">Since Last</div></div>
   </div>
 
-  <div class="settings">
-    <button id="toggleWake" class="toggle"><span class="dot"></span>Keep screen on</button>
+  <div class="rule-row hide-in-focus">
+    Go-time rule:
+    <select id="ruleSelect">
+      <option value="5">5-1-1</option>
+      <option value="4">4-1-1</option>
+      <option value="3">3-1-1</option>
+    </select>
+  </div>
+
+  <div class="settings hide-in-focus">
+    <button id="toggleWake" class="toggle"><span class="dot"></span><span id="wakeLabel">Keep screen on</span></button>
     <button id="toggleSound" class="toggle"><span class="dot"></span><span id="soundLabel">Sound</span></button>
   </div>
 
-  <div class="history-header">
+  <div class="history-header hide-in-focus">
     <h2>History</h2>
-    <button id="exportBtn" class="btn-small">Export</button>
-    <button id="clearBtn" class="btn-small">Clear all</button>
   </div>
 
-  <div class="view-toggle">
+  <div class="actions hide-in-focus">
+    <button id="addBtn" class="btn-small">＋ Add</button>
+    <button id="summaryBtn" class="btn-small">Summary</button>
+    <button id="exportBtn" class="btn-small">Export</button>
+    <button id="clearBtn" class="btn-small">Clear</button>
+  </div>
+
+  <div class="view-toggle hide-in-focus">
     <button id="viewList" class="seg on">📋 List</button>
     <button id="viewGraph" class="seg">📊 Graph</button>
   </div>
 
-  <div id="listView">
+  <div id="listView" class="hide-in-focus">
     <table>
       <thead>
         <tr><th>#</th><th>Time</th><th>Duration</th><th>Freq</th><th>Int.</th><th></th></tr>
@@ -229,7 +348,7 @@
     </table>
   </div>
 
-  <div id="graphView" class="hidden">
+  <div id="graphView" class="hidden hide-in-focus">
     <div class="chart-controls">
       <button id="zoomOut" class="zoom-btn">−</button>
       <button id="zoomIn" class="zoom-btn">+</button>
@@ -254,12 +373,15 @@
     let activeStart = null;
     let tickInterval = null;
     let editingIndex = null;            // index currently shown in the detail panel
-    let settings = { keepAwake: false, sound: true };
+    let settings = { keepAwake: false, sound: true, ruleGapMin: 5 };
     let wakeLock = null;
     let view = 'list';                  // 'list' | 'graph'
     let pxPerMin = 30;                  // graph zoom (horizontal scale)
     let lastBars = [];                  // hit-test rects for the chart
     let graphInitialized = false;
+    let patternWasMet = false;          // tracks 5-1-1 transition for the go-time alert
+    let suppressAlert = true;           // don't fire the alert on first render/load
+    let notifyAsked = false;
 
     // ---------- persistence ----------
     function load() {
@@ -319,11 +441,12 @@
       osc.connect(gain); gain.connect(audioCtx.destination);
       osc.start(t); osc.stop(t + dur + 0.03);
     }
-    // kind: 'start' (soft rising), 'stop' (soft falling), 'tap' (tiny tick)
+    // kind: 'start' (soft rising), 'stop' (soft falling), 'tap' (tiny tick), 'alert' (gentle 3-note)
     function chime(kind) {
       if (!settings.sound || !ensureAudio()) return;
       if (kind === 'start')      { tone(523.25, 0, 0.22, 0.10); tone(783.99, 0.13, 0.30, 0.09); }
       else if (kind === 'stop')  { tone(783.99, 0, 0.22, 0.10); tone(523.25, 0.13, 0.34, 0.09); }
+      else if (kind === 'alert') { tone(523.25, 0, 0.30, 0.12); tone(659.25, 0.18, 0.30, 0.12); tone(783.99, 0.36, 0.50, 0.12); }
       else                       { tone(880.00, 0, 0.08, 0.05); }
     }
 
@@ -353,8 +476,11 @@
         if (!settings.keepAwake) releaseWake();
         chime('stop');
         if (end - start >= 1000) {
+          const before = JSON.stringify(contractions);
           contractions.push({ start, end, intensity: null, note: '' });
           save(); renderAll();
+          offerUndo(before, 'Contraction logged');
+          maybeRequestNotify();
           openDetail(contractions.length - 1);   // prompt for intensity/note
         } else {
           renderAll();
@@ -363,7 +489,9 @@
     });
 
     function renderTimerState() {
-      if (activeStart === null) {
+      const active = activeStart !== null;
+      document.body.classList.toggle('contracting', active);
+      if (!active) {
         timerBtn.classList.remove('active');
         timerLabel.textContent = 'Start Contraction';
         timerDisplay.textContent = '0:00';
@@ -391,7 +519,9 @@
       detailNum.textContent = '#' + (i + 1);
       baselineNote.classList.toggle('hidden', i !== 0);
       updateReadout();
+      updateTimingDisplay();
       noteInput.value = c.note || '';
+      updateChips();
       detailPanel.classList.remove('hidden');
       detailPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
@@ -400,14 +530,79 @@
       intReadout.textContent = fmtIntensity(contractions[editingIndex].intensity);
     }
     function closeDetail() {
-      if (editingIndex !== null && contractions[editingIndex]) {
-        contractions[editingIndex].note = noteInput.value.trim();
-        save();
-      }
       editingIndex = null;
       detailPanel.classList.add('hidden');
       renderAll();
     }
+
+    // live-save the note on every keystroke so it's never lost when the panel switches
+    noteInput.addEventListener('input', () => {
+      if (editingIndex === null || !contractions[editingIndex]) return;
+      contractions[editingIndex].note = noteInput.value;
+      updateChips();
+      save();
+    });
+
+    // ---------- timing editor ----------
+    const editStart = document.getElementById('editStart');
+    const editEnd = document.getElementById('editEnd');
+    const editDur = document.getElementById('editDur');
+    function fmtClockSec(ts) {
+      return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+    function updateTimingDisplay() {
+      if (editingIndex === null) return;
+      const c = contractions[editingIndex];
+      editStart.textContent = fmtClockSec(c.start);
+      editEnd.textContent = fmtClockSec(c.end);
+      editDur.textContent = fmtDuration(c.end - c.start);
+    }
+    detailPanel.querySelectorAll('[data-edit]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (editingIndex === null) return;
+        const c = contractions[editingIndex];
+        const prev = contractions[editingIndex - 1], next = contractions[editingIndex + 1];
+        const stepMs = parseInt(btn.dataset.step, 10) * 1000;
+        if (btn.dataset.edit === 'start') {
+          let s = c.start + stepMs;
+          s = Math.min(s, c.end - 1000);                 // keep at least 1s long
+          if (prev) s = Math.max(s, prev.start + 1000);  // don't cross the previous one
+          c.start = s;
+        } else {
+          let e = c.end + stepMs;
+          e = Math.max(e, c.start + 1000);
+          e = Math.min(e, Date.now());                   // can't end in the future
+          if (next) e = Math.min(e, next.start - 1000);  // don't cross the next one
+          c.end = e;
+        }
+        save();
+        updateTimingDisplay();
+        renderStats();
+        if (view === 'graph') drawChart();
+      });
+    });
+
+    // ---------- quick-note chips ----------
+    const chipsEl = document.getElementById('chips');
+    function noteParts(note) { return (note || '').split(' · ').map(s => s.trim()).filter(Boolean); }
+    function updateChips() {
+      if (editingIndex === null) return;
+      const parts = noteParts(contractions[editingIndex].note);
+      chipsEl.querySelectorAll('.chip').forEach(ch => ch.classList.toggle('on', parts.includes(ch.dataset.tag)));
+    }
+    chipsEl.querySelectorAll('.chip').forEach(ch => {
+      ch.addEventListener('click', () => {
+        if (editingIndex === null) return;
+        const tag = ch.dataset.tag;
+        const parts = noteParts(contractions[editingIndex].note);
+        const idx = parts.indexOf(tag);
+        if (idx >= 0) parts.splice(idx, 1); else parts.push(tag);
+        contractions[editingIndex].note = parts.join(' · ');
+        noteInput.value = contractions[editingIndex].note;
+        updateChips();
+        save();
+      });
+    });
     intensityRow.querySelectorAll('.int-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         if (editingIndex === null) return;
@@ -457,14 +652,36 @@
           btn.addEventListener('click', (e) => {
             e.stopPropagation();
             const i = parseInt(btn.dataset.i, 10);
+            const before = JSON.stringify(contractions);
             contractions.splice(i, 1);
             if (editingIndex === i) { editingIndex = null; detailPanel.classList.add('hidden'); }
             save(); renderAll();
+            offerUndo(before, 'Contraction deleted');
           });
         });
       }
       renderStats();
       if (view === 'graph') drawChart();
+    }
+
+    const avg = a => a.reduce((s, x) => s + x, 0) / a.length;
+    function gapsOf(arr) { const g = []; for (let i = 1; i < arr.length; i++) g.push(arr[i].start - arr[i - 1].start); return g; }
+    function durationsOf(arr) { return arr.map(c => c.end - c.start); }
+    // -1 = decreasing, +1 = increasing, 0 = steady/insufficient data
+    function trendDir(values) {
+      if (values.length < 4) return 0;
+      const k = Math.floor(values.length / 2);
+      const recent = values.slice(-k), prev = values.slice(-2 * k, -k);
+      if (!prev.length) return 0;
+      const d = avg(recent) - avg(prev), ref = Math.abs(avg(prev)) || 1;
+      if (Math.abs(d) < 0.08 * ref) return 0;
+      return d < 0 ? -1 : 1;
+    }
+    function trendSpan(dir, kind) {
+      if (dir === 0) return '';
+      const arrow = dir < 0 ? '↓' : '↑';
+      const good = kind === 'freq' ? dir < 0 : dir > 0;   // closer together / longer = progressing
+      return ' <span class="trend ' + (good ? 'good' : 'muted') + '">' + arrow + '</span>';
     }
 
     function renderStats() {
@@ -473,52 +690,83 @@
       document.getElementById('statCount').textContent = recent.length;
 
       const durSet = recent.length ? recent : contractions;
-      document.getElementById('statDur').textContent = durSet.length
-        ? fmtDuration(durSet.reduce((s, c) => s + (c.end - c.start), 0) / durSet.length) : '--';
+      document.getElementById('statDur').innerHTML = durSet.length
+        ? fmtDuration(avg(durationsOf(durSet))) + trendSpan(trendDir(durationsOf(contractions)), 'dur') : '--';
 
       const freqSet = recent.length >= 2 ? recent : contractions;
-      if (freqSet.length >= 2) {
-        let total = 0;
-        for (let i = 1; i < freqSet.length; i++) total += freqSet[i].start - freqSet[i - 1].start;
-        document.getElementById('statFreq').textContent = fmtDuration(total / (freqSet.length - 1));
-      } else document.getElementById('statFreq').textContent = '--';
+      document.getElementById('statFreq').innerHTML = freqSet.length >= 2
+        ? fmtDuration(avg(gapsOf(freqSet))) + trendSpan(trendDir(gapsOf(contractions)), 'freq') : '--';
 
-      document.getElementById('statLast').textContent = contractions.length
-        ? fmtDuration(now - contractions[contractions.length - 1].end) : '--';
+      const sinceLast = contractions.length ? fmtDuration(now - contractions[contractions.length - 1].end) : '--';
+      document.getElementById('statLast').textContent = sinceLast;
 
-      check511();
+      // focus-mode mini stats
+      document.getElementById('fSince').textContent = sinceLast;
+      document.getElementById('fLast').textContent = contractions.length
+        ? fmtDuration(contractions[contractions.length - 1].end - contractions[contractions.length - 1].start) : '--';
+
+      updatePattern();
     }
 
-    function check511() {
-      const now = Date.now(), windowStart = now - 3600000;
-      const recent = contractions.filter(c => c.start >= windowStart);
-      let ok = false;
-      if (recent.length >= 8) {
-        let gapTotal = 0;
-        for (let i = 1; i < recent.length; i++) gapTotal += recent[i].start - recent[i - 1].start;
-        const avgGap = gapTotal / (recent.length - 1);
-        const avgDur = recent.reduce((s, c) => s + (c.end - c.start), 0) / recent.length;
-        const span = recent[recent.length - 1].start - recent[0].start;
-        ok = avgGap <= 5.5 * 60000 && avgDur >= 50000 && span >= 50 * 60000;
+    // Go-time rule (e.g. 5-1-1): contractions ~N min apart, ~1 min long, sustained ~1 hour.
+    function patternMet() {
+      const recent = contractions.filter(c => c.start >= Date.now() - 3600000);
+      if (recent.length < 8) return false;
+      const avgGap = avg(gapsOf(recent));
+      const avgDur = avg(durationsOf(recent));
+      const span = recent[recent.length - 1].start - recent[0].start;
+      return avgGap <= (settings.ruleGapMin + 0.5) * 60000 && avgDur >= 50000 && span >= 50 * 60000;
+    }
+    function updatePattern() {
+      const met = patternMet();
+      const rule = settings.ruleGapMin + '-1-1';
+      const alertEl = document.getElementById('alert511');
+      alertEl.classList.toggle('hidden', !met);
+      alertEl.innerHTML = '⚠️ ' + rule + ' pattern reached — contractions ~' + settings.ruleGapMin +
+        ' min apart, lasting ~1 min, for 1 hour. Consider contacting your provider.';
+      if (met && !patternWasMet && !suppressAlert) {
+        chime('alert');
+        notify(rule + ' pattern reached', 'Time to consider contacting your provider.');
       }
-      document.getElementById('alert511').classList.toggle('hidden', !ok);
+      patternWasMet = met;
     }
 
     function escapeHtml(s) {
       return s.replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
     }
 
+    // ---------- notifications (for the go-time alert) ----------
+    function notify(title, body) {
+      try {
+        if (window.Notification && Notification.permission === 'granted') {
+          new Notification(title, { body, icon: 'icon.svg' });
+        }
+      } catch {}
+    }
+    function maybeRequestNotify() {
+      if (notifyAsked) return;
+      notifyAsked = true;
+      try {
+        if (window.Notification && Notification.permission === 'default') Notification.requestPermission().catch(() => {});
+      } catch {}
+    }
+
     // ---------- settings toggles ----------
+    const wakeSupported = 'wakeLock' in navigator;
     const toggleWake = document.getElementById('toggleWake');
+    const wakeLabel = document.getElementById('wakeLabel');
     const toggleSound = document.getElementById('toggleSound');
     const soundLabel = document.getElementById('soundLabel');
     function renderToggles() {
-      toggleWake.classList.toggle('on', settings.keepAwake);
+      toggleWake.classList.toggle('on', settings.keepAwake && wakeSupported);
+      toggleWake.classList.toggle('na', !wakeSupported);
+      wakeLabel.textContent = wakeSupported ? 'Keep screen on' : 'Screen on (n/a)';
       toggleSound.classList.toggle('on', settings.sound && soundSupported);
       toggleSound.classList.toggle('na', !soundSupported);
       soundLabel.textContent = soundSupported ? 'Sound' : 'Sound (n/a)';
     }
     toggleWake.addEventListener('click', () => {
+      if (!wakeSupported) { showToast('Screen-lock control needs the app served over https'); return; }
       settings.keepAwake = !settings.keepAwake; saveSettings(); renderToggles();
       if (settings.keepAwake) requestWake(); else releaseWake();
     });
@@ -527,6 +775,23 @@
       settings.sound = !settings.sound; saveSettings(); renderToggles();
       if (settings.sound) { chime('start'); showToast('Sound on'); }
       else { showToast('Sound off'); }
+    });
+
+    // go-time rule selector
+    const ruleSelect = document.getElementById('ruleSelect');
+    ruleSelect.addEventListener('change', () => {
+      settings.ruleGapMin = parseInt(ruleSelect.value, 10);
+      saveSettings();
+      patternWasMet = false;        // re-evaluate cleanly against the new rule
+      renderStats();
+    });
+
+    // focus mode
+    const focusBtn = document.getElementById('focusBtn');
+    focusBtn.addEventListener('click', () => {
+      const on = document.body.classList.toggle('focus');
+      focusBtn.textContent = on ? 'Exit' : 'Focus';
+      focusBtn.classList.toggle('btn-primary', on);
     });
 
     // ---------- export ----------
@@ -575,21 +840,22 @@
         setTimeout(() => URL.revokeObjectURL(url), 1000);
         showToast('CSV downloaded');
       } catch {
-        showExportModal(csv);   // last resort: show text to copy manually
+        showTextModal('Copy your log', csv);   // last resort: show text to copy manually
       }
     }
 
-    function showExportModal(csv) {
+    function showTextModal(title, text) {
       const overlay = document.createElement('div');
       overlay.className = 'overlay';
       overlay.innerHTML =
-        '<div class="modal"><h3>Copy your log</h3>' +
+        '<div class="modal"><h3></h3>' +
         '<textarea readonly></textarea>' +
         '<div class="modal-actions">' +
         '<button class="btn-primary" id="mCopy">Copy</button>' +
         '<button class="btn-small" id="mClose">Close</button></div></div>';
+      overlay.querySelector('h3').textContent = title;
       const ta = overlay.querySelector('textarea');
-      ta.value = csv;
+      ta.value = text;
       overlay.querySelector('#mClose').addEventListener('click', () => overlay.remove());
       overlay.querySelector('#mCopy').addEventListener('click', () => {
         ta.select(); ta.setSelectionRange(0, 99999);
@@ -599,13 +865,105 @@
       document.body.appendChild(overlay);
     }
 
+    // ---------- midwife summary ----------
+    function fmtLong(ms) {
+      const totalMin = Math.round(ms / 60000), h = Math.floor(totalMin / 60), m = totalMin % 60;
+      return h > 0 ? h + 'h ' + m + 'm' : m + 'm';
+    }
+    function buildSummary() {
+      const n = contractions.length;
+      if (!n) return 'No contractions logged yet.';
+      const now = Date.now();
+      const recent = contractions.filter(c => c.start >= now - 3600000);
+      const lines = [];
+      lines.push('🤰 Contraction update — ' + fmtClock(now));
+      lines.push('Total: ' + n + ' contractions over ' + fmtLong(now - contractions[0].start));
+      lines.push('Last hour: ' + recent.length + ' contractions');
+      const fset = recent.length >= 2 ? recent : contractions;
+      if (fset.length >= 2) lines.push('Avg frequency: ' + fmtDuration(avg(gapsOf(fset))) + ' apart (start-to-start)');
+      const dset = recent.length ? recent : contractions;
+      lines.push('Avg duration: ' + fmtDuration(avg(durationsOf(dset))));
+      lines.push('Go-time rule ' + settings.ruleGapMin + '-1-1: ' + (patternMet() ? 'MET ✅' : 'not yet'));
+      lines.push('');
+      lines.push('Last ' + Math.min(5, n) + ':');
+      for (let i = n - 1; i >= Math.max(0, n - 5); i--) {
+        const c = contractions[i];
+        const freq = i > 0 ? ' · ' + fmtDuration(c.start - contractions[i - 1].start) + ' apart' : '';
+        lines.push('• ' + fmtClock(c.start) + ' · lasted ' + fmtDuration(c.end - c.start) + freq +
+          (c.note ? ' · ' + c.note : ''));
+      }
+      return lines.join('\n');
+    }
+    document.getElementById('summaryBtn').addEventListener('click', () => {
+      if (contractions.length === 0) { showToast('Nothing to summarise yet'); return; }
+      const text = buildSummary();
+      if (navigator.share) navigator.share({ text }).catch(() => showTextModal('Contraction summary', text));
+      else showTextModal('Contraction summary', text);
+    });
+
+    // ---------- add a missed contraction ----------
+    document.getElementById('addBtn').addEventListener('click', () => {
+      const overlay = document.createElement('div');
+      overlay.className = 'overlay';
+      const pad = v => String(v).padStart(2, '0');
+      const d = new Date(Date.now() - 60000);
+      const localStart = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+        'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+      overlay.innerHTML =
+        '<div class="modal"><h3>Add a contraction</h3>' +
+        '<div class="timing-row"><span class="tlabel">Start</span>' +
+        '<input id="aStart" type="datetime-local" class="note-input" style="min-height:auto" value="' + localStart + '"></div>' +
+        '<div class="timing-row" style="margin-top:10px"><span class="tlabel">Lasted</span>' +
+        '<input id="aMin" type="number" min="0" max="59" value="1" class="note-input" style="min-height:auto;width:64px;text-align:center"> min ' +
+        '<input id="aSec" type="number" min="0" max="59" value="0" class="note-input" style="min-height:auto;width:64px;text-align:center"> sec</div>' +
+        '<div class="modal-actions"><button class="btn-primary" id="aSave">Add</button>' +
+        '<button class="btn-small" id="aCancel">Cancel</button></div></div>';
+      overlay.querySelector('#aCancel').addEventListener('click', () => overlay.remove());
+      overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+      overlay.querySelector('#aSave').addEventListener('click', () => {
+        const start = Date.parse(overlay.querySelector('#aStart').value);
+        const mins = parseInt(overlay.querySelector('#aMin').value, 10) || 0;
+        const secs = parseInt(overlay.querySelector('#aSec').value, 10) || 0;
+        const durMs = (mins * 60 + secs) * 1000;
+        if (isNaN(start) || durMs < 1000) { showToast('Enter a valid start time and duration'); return; }
+        const before = JSON.stringify(contractions);
+        contractions.push({ start, end: start + durMs, intensity: null, note: '' });
+        contractions.sort((a, b) => a.start - b.start);
+        save(); renderAll();
+        overlay.remove();
+        offerUndo(before, 'Contraction added');
+        openDetail(contractions.findIndex(c => c.start === start));
+      });
+      document.body.appendChild(overlay);
+    });
+
     let toastTimer = null;
-    function showToast(msg) {
-      let t = document.querySelector('.toast');
-      if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); }
-      t.textContent = msg;
+    function showToast(msg, action) {
+      const existing = document.querySelector('.toast');
+      if (existing) existing.remove();
+      const t = document.createElement('div');
+      t.className = 'toast';
+      const span = document.createElement('span');
+      span.textContent = msg;
+      t.appendChild(span);
+      if (action) {
+        const b = document.createElement('button');
+        b.className = 'toast-action';
+        b.textContent = action.label;
+        b.addEventListener('click', () => { action.cb(); t.remove(); });
+        t.appendChild(b);
+      }
+      document.body.appendChild(t);
       clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => t.remove(), 1800);
+      toastTimer = setTimeout(() => t.remove(), action ? 6000 : 1800);
+    }
+    function offerUndo(prevSnapshot, label) {
+      showToast(label, { label: 'Undo', cb: () => {
+        contractions = JSON.parse(prevSnapshot);
+        editingIndex = null;
+        detailPanel.classList.add('hidden');
+        save(); renderAll();
+      } });
     }
 
     // ---------- view toggle + graph ----------
@@ -788,9 +1146,11 @@
     // ---------- clear ----------
     document.getElementById('clearBtn').addEventListener('click', () => {
       if (contractions.length === 0) return;
-      if (confirm('Delete all logged contractions? This cannot be undone.')) {
+      if (confirm('Delete all logged contractions?')) {
+        const before = JSON.stringify(contractions);
         contractions = []; editingIndex = null; detailPanel.classList.add('hidden');
         save(); renderAll();
+        offerUndo(before, 'All contractions cleared');
       }
     });
 
@@ -804,10 +1164,12 @@
 
     // ---------- init ----------
     load();
+    ruleSelect.value = String([3, 4, 5].includes(settings.ruleGapMin) ? settings.ruleGapMin : 5);
     renderToggles();
     renderTimerState();
     if (activeStart !== null) { startTick(); requestWake(); }
     renderAll();
+    suppressAlert = false;   // allow the go-time alert to fire on future transitions
   </script>
 </body>
 </html>
