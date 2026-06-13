@@ -57,6 +57,7 @@
     }
     .timer-display { font-variant-numeric: tabular-nums; font-size: 2.6rem; letter-spacing: 1px; }
     .timer-label { font-size: 1rem; font-weight: 600; opacity: 0.95; }
+    .timer-caption { font-size: 0.8rem; font-weight: 600; opacity: 0.8; min-height: 1em; }
 
     /* Detail / intensity + note panel */
     .panel {
@@ -247,6 +248,7 @@
   <button id="timerBtn" class="timer-btn">
     <span id="timerLabel" class="timer-label">Start Contraction</span>
     <span id="timerDisplay" class="timer-display">0:00</span>
+    <span id="timerCaption" class="timer-caption"></span>
   </button>
 
   <div id="breath">
@@ -383,7 +385,6 @@
     /** @type {{start:number,end:number,intensity?:string|null,note?:string}[]} */
     let contractions = [];
     let activeStart = null;
-    let tickInterval = null;
     let editingIndex = null;            // index currently shown in the detail panel
     let settings = { keepAwake: false, sound: true, ruleGapMin: 5, lang: 'en', maternity: '' };
     let wakeLock = null;
@@ -401,6 +402,7 @@
         title: '🤰 Contraction Tracker',
         subtitle: 'Tap to start when a contraction begins, tap again when it ends.',
         startContraction: 'Start Contraction', tapToStop: 'Tap to Stop',
+        capCurrent: 'current contraction', capSince: 'since last contraction',
         contractionWord: 'Contraction',
         baseline: 'First contraction — sets the baseline. On the next ones, tap to describe how they compare.',
         weaker: 'Weaker', same: 'Same', stronger: 'Stronger',
@@ -440,6 +442,7 @@
         title: '🤰 Suivi des contractions',
         subtitle: 'Touchez pour démarrer au début d’une contraction, touchez à nouveau à la fin.',
         startContraction: 'Démarrer la contraction', tapToStop: 'Touchez pour arrêter',
+        capCurrent: 'contraction en cours', capSince: 'depuis la dernière',
         contractionWord: 'Contraction',
         baseline: 'Première contraction — sert de référence. Sur les suivantes, touchez pour décrire la comparaison.',
         weaker: 'Plus faible', same: 'Identique', stronger: 'Plus forte',
@@ -580,15 +583,17 @@
     const timerBtn = document.getElementById('timerBtn');
     const timerLabel = document.getElementById('timerLabel');
     const timerDisplay = document.getElementById('timerDisplay');
+    const timerCaption = document.getElementById('timerCaption');
 
     timerBtn.addEventListener('click', () => {
       if (activeStart === null) {
+        if (editingIndex !== null) { editingIndex = null; detailPanel.classList.add('hidden'); }
         activeStart = Date.now();
-        save(); renderTimerState(); startTick(); requestWake(); chime('start');
+        save(); renderTimerState(); requestWake(); chime('start');
       } else {
         const end = Date.now(), start = activeStart;
         activeStart = null;
-        save(); stopTick(); renderTimerState();
+        save(); renderTimerState();
         if (!settings.keepAwake) releaseWake();
         chime('stop');
         if (end - start >= 1000) {
@@ -607,19 +612,27 @@
     function renderTimerState() {
       const active = activeStart !== null;
       document.body.classList.toggle('contracting', active);
-      if (!active) {
-        timerBtn.classList.remove('active');
-        timerLabel.textContent = t('startContraction');
-        timerDisplay.textContent = '0:00';
+      timerBtn.classList.toggle('active', active);
+      timerLabel.textContent = active ? t('tapToStop') : t('startContraction');
+      timerCaption.textContent = active ? t('capCurrent') : (contractions.length ? t('capSince') : '');
+      timerBtn.setAttribute('aria-label', active ? t('tapToStop') : t('startContraction'));
+      heartbeat();
+    }
+    // One heartbeat (every second) drives the big number: the running contraction
+    // when active, otherwise the live time since the last contraction ended.
+    function heartbeat() {
+      const now = Date.now();
+      if (activeStart !== null) {
+        timerDisplay.textContent = fmtDuration(now - activeStart);
+      } else if (contractions.length) {
+        const sinceLast = fmtDuration(now - contractions[contractions.length - 1].end);
+        timerDisplay.textContent = sinceLast;
+        document.getElementById('statLast').textContent = sinceLast;
+        document.getElementById('fSince').textContent = sinceLast;
       } else {
-        timerBtn.classList.add('active');
-        timerLabel.textContent = t('tapToStop');
-        updateTick();
+        timerDisplay.textContent = '0:00';
       }
     }
-    function updateTick() { if (activeStart !== null) timerDisplay.textContent = fmtDuration(Date.now() - activeStart); }
-    function startTick() { stopTick(); tickInterval = setInterval(updateTick, 250); }
-    function stopTick() { if (tickInterval) { clearInterval(tickInterval); tickInterval = null; } }
 
     // ---------- detail / intensity / note panel ----------
     const detailPanel = document.getElementById('detailPanel');
@@ -778,6 +791,8 @@
       }
       renderStats();
       if (view === 'graph') drawChart();
+      // the instructional subtitle is only useful before anything is logged
+      document.querySelector('.subtitle').classList.toggle('hidden', contractions.length > 0);
     }
 
     const avg = a => a.reduce((s, x) => s + x, 0) / a.length;
@@ -1322,8 +1337,9 @@
       }
     });
 
-    // live "since last" ticker
-    setInterval(() => { if (activeStart === null) renderStats(); }, 10000);
+    // heartbeat: live big number every second; periodic full stats for the rolling 1-hour window
+    setInterval(heartbeat, 1000);
+    setInterval(() => { if (activeStart === null) renderStats(); }, 15000);
 
     // ---------- service worker (only over http/https) ----------
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
@@ -1341,7 +1357,7 @@
     load();
     ruleSelect.value = String([3, 4, 5].includes(settings.ruleGapMin) ? settings.ruleGapMin : 5);
     applyLang();             // sets language + renders toggles, timer, history
-    if (activeStart !== null) { startTick(); requestWake(); }
+    if (activeStart !== null) requestWake();
     suppressAlert = false;   // allow the go-time alert to fire on future transitions
   </script>
 </body>
