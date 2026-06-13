@@ -226,6 +226,14 @@
     .trend.muted { color: var(--muted); }
     .toast-action { background: rgba(0,0,0,0.18); border: none; color: inherit; font-weight: 700;
       border-radius: 999px; padding: 4px 12px; margin-left: 10px; cursor: pointer; }
+
+    /* Maternity address */
+    .maternity { display: flex; align-items: center; gap: 8px; background: var(--card);
+      border-radius: 12px; padding: 10px 12px; margin-bottom: 16px; }
+    .mat-link { color: var(--accent); text-decoration: none; font-size: 0.9rem; font-weight: 600;
+      flex: 1; word-break: break-word; }
+    .mat-link:active { opacity: 0.6; }
+    .maternity .btn-small { flex: 0 0 auto; }
   </style>
 </head>
 <body>
@@ -301,6 +309,11 @@
 
   <div id="alert511" class="alert hidden"></div>
 
+  <div id="maternity" class="maternity">
+    <a id="matLink" class="mat-link hidden" target="_blank" rel="noopener"></a>
+    <button id="matBtn" class="btn-small"></button>
+  </div>
+
   <div class="stats hide-in-focus">
     <div class="stat"><div id="statCount" class="value">0</div><div class="name" data-i18n="totalHr">Total (1 hr)</div></div>
     <div class="stat"><div id="statFreq" class="value">--</div><div class="name" data-i18n="avgFreq">Avg Frequency</div></div>
@@ -372,7 +385,7 @@
     let activeStart = null;
     let tickInterval = null;
     let editingIndex = null;            // index currently shown in the detail panel
-    let settings = { keepAwake: false, sound: true, ruleGapMin: 5, lang: 'en' };
+    let settings = { keepAwake: false, sound: true, ruleGapMin: 5, lang: 'en', maternity: '' };
     let wakeLock = null;
     let view = 'list';                  // 'list' | 'graph'
     let pxPerMin = 30;                  // graph zoom (horizontal scale)
@@ -413,6 +426,8 @@
         copyLogTitle: 'Copy your log', summaryTitle: 'Contraction summary', copy: 'Copy', close: 'Close',
         addTitle: 'Add a contraction', lasted: 'Lasted', minU: 'min', secU: 'sec', cancel: 'Cancel',
         confirmClear: 'Delete all logged contractions?',
+        maternityTitle: 'Maternity address', addMaternity: '＋ Maternity address', matEdit: '✏️ Edit',
+        save: 'Save', maternityPh: 'Hospital / clinic name or address',
         alertTpl: '⚠️ {rule} pattern reached — contractions ~{gap} min apart, lasting ~1 min, for 1 hour. Consider contacting your provider.',
         notifyTitle: '{rule} pattern reached', notifyBody: 'Time to consider contacting your provider.',
         sumHeader: '🤰 Contraction update — {time}', sumTotal: 'Total: {n} contractions over {dur}',
@@ -450,6 +465,8 @@
         copyLogTitle: 'Copiez votre journal', summaryTitle: 'Résumé des contractions', copy: 'Copier', close: 'Fermer',
         addTitle: 'Ajouter une contraction', lasted: 'Durée', minU: 'min', secU: 's', cancel: 'Annuler',
         confirmClear: 'Supprimer toutes les contractions enregistrées ?',
+        maternityTitle: 'Adresse de la maternité', addMaternity: '＋ Adresse de la maternité', matEdit: '✏️ Modifier',
+        save: 'Enregistrer', maternityPh: 'Nom ou adresse de l’hôpital / la clinique',
         alertTpl: '⚠️ Schéma {rule} atteint — contractions à ~{gap} min d’intervalle, durant ~1 min, pendant 1 heure. Envisagez de contacter votre sage-femme/médecin.',
         notifyTitle: 'Schéma {rule} atteint', notifyBody: 'Il est temps d’envisager de contacter votre sage-femme/médecin.',
         sumHeader: '🤰 Point contractions — {time}', sumTotal: 'Total : {n} contractions sur {dur}',
@@ -472,6 +489,7 @@
       document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
       document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
       document.getElementById('langBtn').textContent = settings.lang === 'en' ? 'FR' : 'EN';
+      renderMaternity();
       focusBtn.textContent = document.body.classList.contains('focus') ? t('exit') : t('focus');
       renderToggles();
       renderTimerState();
@@ -896,6 +914,50 @@
       settings.lang = settings.lang === 'en' ? 'fr' : 'en';
       saveSettings();
       applyLang();
+    });
+
+    // ---------- maternity address ----------
+    const maternityBox = document.getElementById('maternity');
+    const matLink = document.getElementById('matLink');
+    const matBtn = document.getElementById('matBtn');
+    function mapUrl(addr) { return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr); }
+    function renderMaternity() {
+      const addr = (settings.maternity || '').trim();
+      maternityBox.classList.toggle('hide-in-focus', !addr);   // hide empty box in focus mode
+      if (addr) {
+        matLink.classList.remove('hidden');
+        matLink.href = mapUrl(addr);
+        matLink.textContent = '📍 ' + addr;
+        matBtn.textContent = t('matEdit');
+      } else {
+        matLink.classList.add('hidden');
+        matBtn.textContent = t('addMaternity');
+      }
+    }
+    matBtn.addEventListener('click', () => {
+      const overlay = document.createElement('div');
+      overlay.className = 'overlay';
+      overlay.innerHTML =
+        '<div class="modal"><h3></h3>' +
+        '<input id="mInput" class="note-input" style="min-height:auto">' +
+        '<div class="modal-actions"><button class="btn-primary" id="mSave"></button>' +
+        '<button class="btn-small" id="mCancel"></button></div></div>';
+      overlay.querySelector('h3').textContent = t('maternityTitle');
+      const inp = overlay.querySelector('#mInput');
+      inp.placeholder = t('maternityPh');
+      inp.value = settings.maternity || '';
+      overlay.querySelector('#mSave').textContent = t('save');
+      overlay.querySelector('#mCancel').textContent = t('cancel');
+      overlay.querySelector('#mCancel').addEventListener('click', () => overlay.remove());
+      overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+      overlay.querySelector('#mSave').addEventListener('click', () => {
+        settings.maternity = inp.value.trim();
+        saveSettings();
+        renderMaternity();
+        overlay.remove();
+      });
+      document.body.appendChild(overlay);
+      setTimeout(() => inp.focus(), 50);
     });
 
     // ---------- export ----------
