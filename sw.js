@@ -1,7 +1,7 @@
 /* Service worker — only used when the app is served over http(s).
    Caches everything so the installed app works fully offline, but fetches a
    fresh page when online so updates actually reach the user. */
-const CACHE = 'contractions-v5';
+const CACHE = 'contractions-v6';
 const ASSETS = ['./', './index.html', './manifest.json', './icon.svg', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (e) => {
