@@ -30,6 +30,8 @@ const CONFIG = {
     facts: {
       "Full name": "Anna Tâm Sophie Xuân Doan",
       "Born": "June 22, 2026 at 9:39 PM",
+      "Weight": "2.995 kg",
+      "Height": "49 cm",
       "Place": "Le Chesnay-Rocquencourt, France",
     },
     // A free-text paragraph.
