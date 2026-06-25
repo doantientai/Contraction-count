@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome, little one 💕</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👶</text></svg>" />
+</head>
+<body>
+  <div class="bg-decoration" aria-hidden="true"></div>
+
+  <main class="container">
+
+    <!-- ============ SCREEN 1: GUESS THE NAME ============ -->
+    <section id="screen-guess" class="screen active">
+      <div class="card">
+        <p class="eyebrow">Our family just got bigger 🎀</p>
+        <h1 class="title">Can you guess her name?</h1>
+        <p class="subtitle">
+          If you already know it, type it below. If not, ask for a hint and
+          take your best guess — the clock is ticking!
+        </p>
+
+        <form id="guess-form" autocomplete="off">
+          <div class="input-row">
+            <input
+              type="text"
+              id="guess-input"
+              placeholder="Type the baby's name…"
+              aria-label="Baby's name guess"
+              required
+            />
+            <button type="submit" class="btn btn-primary">Guess</button>
+          </div>
+          <p id="guess-feedback" class="feedback" role="status" aria-live="polite"></p>
+        </form>
+
+        <div class="hint-area">
+          <button id="hint-btn" class="btn btn-ghost" type="button">
+            🤔 I need a hint
+          </button>
+          <ul id="hint-list" class="hint-list"></ul>
+        </div>
+
+        <div id="timer" class="timer" hidden>
+          ⏱️ <span id="timer-display">00:00.0</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SCREEN 2: SAVE YOUR SCORE ============ -->
+    <section id="screen-score" class="screen">
+      <div class="card">
+        <div class="celebrate">🎉</div>
+        <h1 class="title">You got it!</h1>
+        <p class="subtitle">
+          You guessed it in <strong id="final-time">00:00.0</strong>.
+          Add your name to the scoreboard!
+        </p>
+
+        <form id="score-form" autocomplete="off">
+          <div class="input-row">
+            <input
+              type="text"
+              id="player-input"
+              placeholder="Your name…"
+              aria-label="Your name"
+              maxlength="30"
+              required
+            />
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+        </form>
+
+        <h2 class="scoreboard-title">🏆 Scoreboard</h2>
+        <ol id="scoreboard" class="scoreboard"></ol>
+
+        <button id="to-reveal-btn" class="btn btn-primary btn-block">
+          Continue to meet her →
+        </button>
+      </div>
+    </section>
+
+    <!-- ============ SCREEN 3: PHOTO REVEAL ============ -->
+    <section id="screen-reveal" class="screen">
+      <div class="card card-wide">
+        <p class="eyebrow">Introducing…</p>
+        <h1 id="reveal-name" class="title title-xl">Baby</h1>
+        <p id="reveal-tagline" class="subtitle"></p>
+
+        <div id="gallery" class="gallery"></div>
+
+        <div id="details" class="details"></div>
+
+        <p class="footer-note">Made with 💕</p>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
