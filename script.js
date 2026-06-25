@@ -4,22 +4,22 @@
 const CONFIG = {
   // The baby's name the visitor has to guess (matching is case-insensitive
   // and ignores accents/spaces). You can list nicknames/spellings too.
-  babyName: "Emma",
-  acceptedNames: ["Emma"], // add alternative spellings if you like
+  babyName: "Anna",
+  acceptedNames: ["Anna"], // add alternative spellings if you like
 
   // Hints are revealed one-by-one when the visitor clicks "I need a hint".
   hints: [
-    "It starts with the letter “E”.",
+    "It starts (and ends!) with the letter “A”.",
     "It has 4 letters.",
-    "It’s a classic name that means “whole” or “universal”.",
-    "A famous Emma wrote in Jane Austen’s world… 😉",
+    "It’s a palindrome — it reads the same forwards and backwards.",
+    "It’s a timeless name meaning “grace”. 💫",
   ],
 
   // Shown on the reveal page after a correct guess.
   reveal: {
-    tagline: "Born to be loved. 👶✨",
+    tagline: "Anna, Tâm, Sophie, Xuân Doan — born to be loved. 👶✨",
     // Drop image files next to index.html and reference them here, e.g.
-    //   { src: "photos/emma-1.jpg", caption: "Day one 💕" }
+    //   { src: "photos/anna-1.jpg", caption: "Day one 💕" }
     // If "src" is left empty, a cute placeholder is shown instead.
     photos: [
       { src: "", caption: "First hello 💕" },
@@ -28,14 +28,13 @@ const CONFIG = {
     ],
     // Key/value facts displayed as a list.
     facts: {
-      "Born": "June 25, 2026",
-      "Weight": "3.4 kg",
-      "Length": "50 cm",
-      "Time": "08:42 AM",
+      "Full name": "Anna Tâm Sophie Xuân Doan",
+      "Born": "June 22, 2026 at 9:39 PM",
+      "Place": "Le Chesnay-Rocquencourt, France",
     },
     // A free-text paragraph.
     story:
-      "After a long wait, our little star finally arrived. " +
+      "After a long wait, our little Anna finally arrived. " +
       "Mum and baby are both doing wonderfully, and our hearts have " +
       "never been so full. Thank you for celebrating this moment with us! 💕",
   },
