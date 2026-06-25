@@ -22,9 +22,7 @@ const CONFIG = {
     //   { src: "photos/anna-1.jpg", caption: "Day one 💕" }
     // If "src" is left empty, a cute placeholder is shown instead.
     photos: [
-      { src: "", caption: "First hello 💕" },
-      { src: "", caption: "Tiny toes 🦶" },
-      { src: "", caption: "Sweet dreams 😴" },
+      { src: "photos/anna-1.jpg", caption: "Sweet dreams, baby Anna 💕" },
     ],
     // Key/value facts displayed as a list.
     facts: {
